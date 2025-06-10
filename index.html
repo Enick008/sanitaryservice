@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบแจ้งงานดูดสิ่งปฏิกูล</title>
+    <!-- Chart.js CDN for drawing graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
@@ -258,6 +260,18 @@
             font-weight: 500;
             color: #666;
         }
+        /* Chart container styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%; /* Ensure responsiveness */
+            height: 350px; /* Fixed height for charts */
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #FFFFFF;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
         footer {
             text-align: center;
             margin-top: 40px; /* Space above footer */
@@ -469,6 +483,31 @@
                 <p><strong>ยอดรวมค่าบริการทั้งหมด:</strong> <span id="totalAmount">0</span> บาท</p>
                 <h4>งานต่อพนักงาน:</h4>
                 <ul id="staffStatsList"></ul>
+
+                <!-- Chart for Staff Performance -->
+                <div class="chart-container">
+                    <canvas id="staffPerformanceChart"></canvas>
+                </div>
+
+                <!-- Chart for Monthly Services -->
+                <div class="chart-container">
+                    <canvas id="monthlyServicesChart"></canvas>
+                </div>
+
+                <!-- Chart for Paid vs Free Services -->
+                <div class="chart-container">
+                    <canvas id="paidFreeChart"></canvas>
+                </div>
+
+                <!-- Chart for Monthly Revenue -->
+                <div class="chart-container">
+                    <canvas id="monthlyRevenueChart"></canvas>
+                </div>
+
+                <!-- Chart for Subdistrict Volume -->
+                <div class="chart-container">
+                    <canvas id="subdistrictVolumeChart"></canvas>
+                </div>
             </div>
             <div id="statsMessage" class="message"></div>
         </div>
@@ -514,6 +553,34 @@
         let allBookingsData = []; // Stores all fetched bookings
         let editingRowTimestamp = null; // Keeps track of which row is currently being edited
 
+        // Global chart instances to destroy existing charts before rendering new ones
+        // CHANGED: Declared with 'var' instead of 'let' to avoid redeclaration errors
+        var staffPerformanceChart = null;
+        var monthlyServicesChart = null;
+        var paidFreeChart = null;
+        var monthlyRevenueChart = null;
+        var subdistrictVolumeChart = null;
+
+
+        // Helper to get last 12 months in 'YYYY-MM' format for data processing
+        function getLast12MonthsFormatted() {
+            const months = [];
+            const today = new Date();
+            for (let i = 0; i < 12; i++) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                months.unshift(`${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`);
+            }
+            return months;
+        }
+
+        // Helper to format 'YYYY-MM' to readable month name (e.g., "มกราคม 2567")
+        function formatMonthYearToThai(ym) {
+            const [year, month] = ym.split('-');
+            const date = new Date(parseInt(year), parseInt(month) - 1, 1);
+            return date.toLocaleString('th-TH', { month: 'long', year: 'numeric' });
+        }
+
+
         // --- Tab Switching Logic ---
         function showTab(tabId, event) {
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -546,11 +613,25 @@
             if (!forStats) {
                 document.getElementById('bookingsTableContainer').innerHTML = '<p>กำลังโหลดข้อมูล...</p>';
             } else {
+                // Reset stats content with loading indicators
                 document.getElementById('totalBookings').textContent = 'กำลังโหลด...';
                 document.getElementById('completedBookings').textContent = 'กำลังโหลด...';
                 document.getElementById('incompleteBookings').textContent = 'กำลังโหลด...';
                 document.getElementById('totalAmount').textContent = 'กำลังโหลด...';
                 document.getElementById('staffStatsList').innerHTML = '<p>กำลังโหลด...</p>';
+
+                // Destroy existing charts before rendering new ones to prevent canvas issues
+                if (staffPerformanceChart) staffPerformanceChart.destroy();
+                if (monthlyServicesChart) monthlyServicesChart.destroy();
+                if (paidFreeChart) paidFreeChart.destroy();
+                if (monthlyRevenueChart) monthlyRevenueChart.destroy();
+                if (subdistrictVolumeChart) subdistrictVolumeChart.destroy();
+                // Clear canvas elements by setting innerHTML (safer way to re-initialize for Chart.js)
+                document.getElementById('staffPerformanceChart').outerHTML = '<canvas id="staffPerformanceChart"></canvas>';
+                document.getElementById('monthlyServicesChart').outerHTML = '<canvas id="monthlyServicesChart"></canvas>';
+                document.getElementById('paidFreeChart').outerHTML = '<canvas id="paidFreeChart"></canvas>';
+                document.getElementById('monthlyRevenueChart').outerHTML = '<canvas id="monthlyRevenueChart"></canvas>';
+                document.getElementById('subdistrictVolumeChart').outerHTML = '<canvas id="subdistrictVolumeChart"></canvas>';
             }
 
             const url = `${WEB_APP_URL}?action=getBookings&callback=handleGetBookingsResponse`;
@@ -562,9 +643,7 @@
                 })
                 .catch(error => {
                     console.error('Fetch error:', error);
-                    messageDiv.textContent = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message;
-                    messageDiv.className = 'message error';
-                    messageDiv.style.display = 'block';
+                    displayMessage('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message, 'error', forStats ? 'statsMessage' : 'viewMessage');
                     if (!forStats) {
                         document.getElementById('bookingsTableContainer').innerHTML = '';
                     } else {
@@ -918,39 +997,369 @@
 
 
         // --- Statistics Tab Functions ---
+        // Global chart instances to be managed
+        // CHANGED: Declared with 'var' instead of 'let' to avoid redeclaration errors
+        var staffPerformanceChart = null;
+        var monthlyServicesChart = null;
+        var paidFreeChart = null;
+        var monthlyRevenueChart = null;
+        var subdistrictVolumeChart = null;
+
         function renderStatistics(bookings) {
             let totalBookings = bookings.length;
             let completedBookings = bookings.filter(b => b.completed === true).length;
             let incompleteBookings = totalBookings - completedBookings;
             let totalAmount = bookings.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
 
+            // Calculate bookings per staff with incomplete count
             const staffStats = {};
             bookings.forEach(b => {
                 if (b.staff) {
-                    staffStats[b.staff] = (staffStats[b.staff] || 0) + 1;
+                    if (!staffStats[b.staff]) {
+                        staffStats[b.staff] = { total: 0, incomplete: 0 };
+                    }
+                    staffStats[b.staff].total++;
+                    if (!b.completed) { // If not completed, increment incomplete count
+                        staffStats[b.staff].incomplete++;
+                    }
                 }
             });
 
+            // Update HTML elements with calculated statistics
             document.getElementById('totalBookings').textContent = totalBookings;
             document.getElementById('completedBookings').textContent = completedBookings;
             document.getElementById('incompleteBookings').textContent = incompleteBookings;
             document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
 
+            // Render staff statistics as a list
             const staffStatsList = document.getElementById('staffStatsList');
             staffStatsList.innerHTML = '';
             if (Object.keys(staffStats).length > 0) {
                 const sortedStaff = Object.keys(staffStats).sort();
                 sortedStaff.forEach(staff => {
                     const li = document.createElement('li');
-                    li.textContent = `${staff}: ${staffStats[staff]} งาน`;
+                    li.textContent = `${staff}: ${staffStats[staff].total} งาน (ยังไม่เสร็จ: ${staffStats[staff].incomplete} งาน)`;
                     staffStatsList.appendChild(li);
                 });
             } else {
                 staffStatsList.innerHTML = '<li>ไม่มีข้อมูลพนักงาน</li>';
             }
 
+
+            // --- Data for new Charts ---
+            const last12Months = getLast12MonthsFormatted();
+            const monthlyServicesData = {}; // { 'YYYY-MM': count }
+            const monthlyRevenueData = {};  // { 'YYYY-MM': sumOfAmount }
+            let paidCount = 0;
+            let freeCount = 0;
+            const subdistrictVolumeData = {}; // { subdistrictName: totalVolume }
+
+            // Initialize monthly data for the last 12 months
+            last12Months.forEach(m => {
+                monthlyServicesData[m] = 0;
+                monthlyRevenueData[m] = 0;
+            });
+            // Initialize subdistrict data for all known subdistricts
+            SUBDISTRICT_OPTIONS.forEach(sub => {
+                subdistrictVolumeData[sub] = 0;
+            });
+
+
+            bookings.forEach(b => {
+                // For monthly services and revenue
+                const date = new Date(b.timestamp);
+                const yearMonth = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                if (last12Months.includes(yearMonth)) {
+                    monthlyServicesData[yearMonth]++;
+                    if (b.paid) { // Only count paid services for revenue
+                        monthlyRevenueData[yearMonth] += (parseFloat(b.amount) || 0);
+                    }
+                }
+
+                // For paid vs free
+                if (b.paid) {
+                    paidCount++;
+                } else {
+                    freeCount++;
+                }
+
+                // For subdistrict volume
+                if (b.subdistrict && b.amount !== undefined) {
+                    const volume = (parseFloat(b.amount) || 0) / 250; // Convert amount to volume
+                    subdistrictVolumeData[b.subdistrict] = (subdistrictVolumeData[b.subdistrict] || 0) + volume;
+                }
+            });
+
+            // --- Chart Rendering ---
+
+            // 1. Staff Performance Chart
+            const staffLabels = Object.keys(staffStats).sort();
+            const staffTotalJobData = staffLabels.map(staff => staffStats[staff].total);
+            const staffIncompleteJobData = staffLabels.map(staff => staffStats[staff].incomplete);
+
+            const staffPerformanceCtx = document.getElementById('staffPerformanceChart').getContext('2d');
+            if (staffPerformanceChart) staffPerformanceChart.destroy();
+            staffPerformanceChart = new Chart(staffPerformanceCtx, {
+                type: 'bar',
+                data: {
+                    labels: staffLabels,
+                    datasets: [
+                        {
+                            label: 'งานทั้งหมด',
+                            data: staffTotalJobData,
+                            backgroundColor: '#FF66B2', // Pink
+                            borderColor: '#E6007A',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'งานที่ยังไม่เสร็จ',
+                            data: staffIncompleteJobData,
+                            backgroundColor: '#F44336', // Red
+                            borderColor: '#da190b',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'จำนวนงาน'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'พนักงาน'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'จำนวนงานรวมและงานที่ยังไม่เสร็จต่อพนักงาน',
+                            font: { size: 16, weight: 'bold' },
+                            color: '#E6007A'
+                        }
+                    }
+                }
+            });
+
+
+            // 2. Monthly Services Chart (last 12 months)
+            const monthlyLabels = last12Months.map(ym => formatMonthYearToThai(ym));
+            const monthlyServiceCounts = last12Months.map(ym => monthlyServicesData[ym]);
+
+            const monthlyServicesCtx = document.getElementById('monthlyServicesChart').getContext('2d');
+            if (monthlyServicesChart) monthlyServicesChart.destroy();
+            monthlyServicesChart = new Chart(monthlyServicesCtx, {
+                type: 'bar',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: 'จำนวนการให้บริการ',
+                        data: monthlyServiceCounts,
+                        backgroundColor: '#FF99C8', // Lighter Pink
+                        borderColor: '#E6007A',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'จำนวนงาน'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'เดือน'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'จำนวนการให้บริการ 12 เดือนล่าสุด',
+                            font: { size: 16, weight: 'bold' },
+                            color: '#E6007A'
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+
+            // 3. Paid vs Free Services Chart (Pie Chart)
+            const paidFreeLabels = ['บริการเก็บเงิน', 'บริการฟรี'];
+            const paidFreeCounts = [paidCount, freeCount];
+            const paidFreeColors = ['#4CAF50', '#F44336']; // Green for paid, Red for free
+
+            const paidFreeCtx = document.getElementById('paidFreeChart').getContext('2d');
+            if (paidFreeChart) paidFreeChart.destroy();
+            paidFreeChart = new Chart(paidFreeCtx, {
+                type: 'pie',
+                data: {
+                    labels: paidFreeLabels,
+                    datasets: [{
+                        data: paidFreeCounts,
+                        backgroundColor: paidFreeColors,
+                        borderColor: '#FFFFFF',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'สัดส่วนระหว่างบริการเก็บเงิน/ฟรี',
+                            font: { size: 16, weight: 'bold' },
+                            color: '#E6007A'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((acc, current) => acc + current, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
+                                    return `${label}: ${value} งาน (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+
+            // 4. Monthly Revenue Chart (last 12 months)
+            const monthlyRevenueLabels = last12Months.map(ym => formatMonthYearToThai(ym));
+            const monthlyRevenueAmounts = last12Months.map(ym => monthlyRevenueData[ym]);
+
+            const monthlyRevenueCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+            if (monthlyRevenueChart) monthlyRevenueChart.destroy();
+            monthlyRevenueChart = new Chart(monthlyRevenueCtx, {
+                type: 'bar', // Can be 'line' for trend
+                data: {
+                    labels: monthlyRevenueLabels,
+                    datasets: [{
+                        label: 'รายได้ (บาท)',
+                        data: monthlyRevenueAmounts,
+                        backgroundColor: '#FFB3C8', // Another pink shade
+                        borderColor: '#E6007A',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'รายได้ (บาท)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'เดือน'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'รายได้ต่อเดือน 12 เดือนล่าสุด',
+                            font: { size: 16, weight: 'bold' },
+                            color: '#E6007A'
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+
+            // 5. Subdistrict Volume Chart
+            const subdistrictVolumeLabels = Object.keys(subdistrictVolumeData).sort((a,b) => {
+                // Sort by predefined order for consistency
+                return SUBDISTRICT_OPTIONS.indexOf(a) - SUBDISTRICT_OPTIONS.indexOf(b);
+            });
+            const subdistrictVolumeValues = subdistrictVolumeLabels.map(sub => subdistrictVolumeData[sub]);
+
+            const subdistrictVolumeCtx = document.getElementById('subdistrictVolumeChart').getContext('2d');
+            if (subdistrictVolumeChart) subdistrictVolumeChart.destroy();
+            subdistrictVolumeChart = new Chart(subdistrictVolumeCtx, {
+                type: 'bar',
+                data: {
+                    labels: subdistrictVolumeLabels,
+                    datasets: [{
+                        label: 'ปริมาณ (ลบ.ม.)',
+                        data: subdistrictVolumeValues,
+                        backgroundColor: [ // Various pink/red shades for visual distinction
+                            '#FF99C8', '#FFB3C8', '#FFCDD2', '#FFDDE3', '#FFE7EA', '#FFF0F5', '#F8E0E0'
+                        ],
+                        borderColor: '#E6007A',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'ปริมาณ (ลูกบาศก์เมตร)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'ตำบล'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'ปริมาณสิ่งปฏิกูลแต่ละตำบล (ลบ.ม.)',
+                            font: { size: 16, weight: 'bold' },
+                            color: '#E6007A'
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+
+            // If no data, show message and destroy charts
             if (totalBookings === 0) {
                 document.getElementById('statsContent').innerHTML = '<p>ไม่พบข้อมูลสำหรับแสดงสถิติ</p>';
+                if (staffPerformanceChart) staffPerformanceChart.destroy();
+                if (monthlyServicesChart) monthlyServicesChart.destroy();
+                if (paidFreeChart) paidFreeChart.destroy();
+                if (monthlyRevenueChart) monthlyRevenueChart.destroy();
+                if (subdistrictVolumeChart) subdistrictVolumeChart.destroy();
             }
         }
 
