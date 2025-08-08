@@ -1,1372 +1,724 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
-    <base target="_top">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบแจ้งงานดูดสิ่งปฏิกูล</title>
-    <!-- Chart.js CDN for drawing graphs -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-            margin: 0; /* Remove default body margin */
-            padding: 20px;
-            background-color: #F8F8F8; /* Very light gray, typical iOS background */
-            color: #333;
-            line-height: 1.6;
-        }
-        header {
-            text-align: center;
-            margin-bottom: 30px; /* Space below header */
-            padding: 15px 0; /* Add some padding for visual separation */
-            background-color: #FFFFFF; /* White background for header area */
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Softer, more subtle shadow */
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            margin-bottom: 20px; /* Adjust margin to create space between header and container */
-        }
-        header img {
-            height: 100px; /* Fixed height as requested */
-            width: auto; /* Maintain aspect ratio */
-            display: block; /* Ensures centering with margin: auto */
-            margin: 0 auto; /* Center the image */
-            border-radius: 8px; /* Consistent with other elements */
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Subtle shadow for the logo */
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #FFFFFF; /* Pure white content background */
-            padding: 30px; /* Increased padding for more breathing room */
-            border-radius: 12px; /* More rounded corners */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Softer, more subtle shadow */
-        }
-        h2 {
-            color: #E6007A; /* A vibrant pink for titles */
-            text-align: center;
-            margin-bottom: 30px; /* More space below title */
-            font-weight: 600; /* Slightly bolder for headings */
-        }
-        .form-group {
-            margin-bottom: 20px; /* More space between form groups */
-        }
-        label {
-            display: block;
-            margin-bottom: 8px; /* Space between label and input */
-            font-weight: 500; /* Medium font weight */
-            color: #555;
-        }
-        input[type="text"],
-        input[type="tel"],
-        input[type="number"],
-        textarea,
-        select { /* Added select to this rule */
-            width: calc(100% - 20px); /* Adjust width for padding */
-            padding: 12px; /* Increased padding inside inputs */
-            border: 1px solid #E0E0E0; /* Light gray border */
-            border-radius: 8px; /* Slightly rounded input fields */
-            box-sizing: border-box;
-            font-size: 16px;
-            transition: border-color 0.2s ease;
-        }
-        input[type="text"]:focus,
-        input[type="tel"]:focus,
-        input[type="number"]:focus,
-        textarea:focus,
-        select:focus { /* Added select to this rule */
-            border-color: #FF66B2; /* Pink border on focus */
-            outline: none; /* Remove default outline */
-        }
-        input[type="checkbox"] {
-            margin-right: 8px;
-            transform: scale(1.2); /* Slightly larger checkbox */
-        }
-        button {
-            background-color: #FF66B2; /* A soft, appealing pink for buttons */
-            color: white;
-            padding: 12px 18px; /* Larger padding for buttons */
-            border: none;
-            border-radius: 8px; /* Rounded buttons */
-            cursor: pointer;
-            font-size: 17px;
-            width: 100%;
-            font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle button shadow */
-        }
-        button:hover {
-            background-color: #E6007A; /* Darker pink on hover */
-            transform: translateY(-1px); /* Slight lift effect */
-        }
-        button:active {
-            transform: translateY(0); /* Press effect */
-        }
-        .action-buttons {
-            display: flex;
-            gap: 5px; /* Space between action buttons */
-            justify-content: center; /* Center buttons within the cell */
-        }
-        .action-buttons button {
-            width: auto; /* Allow buttons to size based on content */
-            padding: 8px 12px; /* Smaller padding for individual action buttons */
-            font-size: 14px;
-            box-shadow: none; /* No extra shadow for nested buttons */
-        }
-        .action-buttons button.save-btn {
-            background-color: #4CAF50; /* Green for Save */
-        }
-        .action-buttons button.save-btn:hover {
-            background-color: #45a049;
-        }
-        .action-buttons button.cancel-btn {
-            background-color: #f44336; /* Red for Cancel */
-        }
-        .action-buttons button.cancel-btn:hover {
-            background-color: #da190b;
-        }
-        .action-buttons button.delete-btn {
-            background-color: #F44336; /* Red for Delete */
-        }
-        .action-buttons button.delete-btn:hover {
-            background-color: #da190b;
-        }
-
-        .message {
-            margin-top: 25px;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            display: none;
-            font-weight: 500;
-        }
-        .success {
-            background-color: #E0FFE0; /* Lighter green for success */
-            color: #1A7A1A; /* Darker green text */
-            border: 1px solid #B3FFB3;
-        }
-        .error {
-            background-color: #FFE0E0; /* Lighter red for error */
-            color: #A03333; /* Darker red text */
-            border: 1px solid #FFB3B3;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 25px;
-            background-color: #FFFFFF;
-            border-radius: 8px;
-            overflow: hidden; /* Ensures rounded corners apply to table */
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Soft shadow for table */
-        }
-        th, td {
-            border: 1px solid #F0F0F0; /* Very light border for table cells */
-            padding: 12px;
-            text-align: left;
-            word-wrap: break-word;
-        }
-        th {
-            background-color: #F8F8F8; /* Light gray header */
-            font-weight: 600;
-            color: #555;
-        }
-        .tab-buttons {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            background-color: #FFFFFF;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        .tab-button {
-            padding: 12px 25px;
-            margin: 5px;
-            border: none; /* No border for tab buttons initially */
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: #F0F0F0; /* Light gray for inactive tabs */
-            color: #666;
-            transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.2s ease;
-            font-size: 16px;
-            font-weight: 500;
-            flex-grow: 1;
-            max-width: 30%;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle shadow for inactive tabs */
-        }
-        .tab-button.active {
-            background-color: #FF66B2; /* Pink for active tab */
-            color: white;
-            box-shadow: 0 3px 8px rgba(255, 102, 178, 0.3); /* Stronger, pink-tinted shadow for active tab */
-        }
-        .tab-button:hover:not(.active) {
-            background-color: #E0E0E0; /* Slightly darker gray on hover for inactive tabs */
-        }
-        .tab-content {
-            display: none;
-            padding: 10px;
-        }
-        .tab-content.active {
-            display: block;
-        }
-
-        .search-filters {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-            padding: 20px;
-            border: 1px solid #E0E0E0;
-            border-radius: 10px;
-            background-color: #FDFDFD;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); /* Inner shadow for filter box */
-        }
-        .search-filters button {
-            grid-column: 1 / -1;
-            margin-top: 15px;
-        }
-
-        #statsContent p {
-            margin-bottom: 10px;
-            font-size: 16px;
-            color: #444;
-        }
-        #statsContent strong {
-            color: #E6007A; /* Pink for strong stats labels */
-        }
-        #statsContent h4 {
-            margin-top: 25px;
-            color: #E6007A;
-            font-weight: 600;
-        }
-        #staffStatsList {
-            list-style-type: none; /* Remove default bullet points */
-            padding-left: 0;
-            margin-top: 15px;
-        }
-        #staffStatsList li {
-            background-color: #FFF0F5; /* Light pink background for list items */
-            margin-bottom: 8px;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid #FFD1E0; /* Lighter pink border */
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 500;
-            color: #666;
-        }
-        /* Chart container styling */
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 100%; /* Ensure responsiveness */
-            height: 350px; /* Fixed height for charts */
-            margin-top: 30px;
-            padding: 15px;
-            background-color: #FFFFFF;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        footer {
-            text-align: center;
-            margin-top: 40px; /* Space above footer */
-            padding: 20px;
-            background-color: #FFF0F5; /* A very light pink/reddish hue for consistency with stats list item */
-            color: #E6007A; /* Use the vibrant pink for text */
-            border-radius: 12px; /* Consistent rounded corners */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Consistent shadow */
-            font-size: 14px;
-            font-weight: 500;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* Custom Modal for Confirmation */
-        .modal {
-            display: none; /* Hidden by default */
-            position: fixed; /* Stay in place */
-            z-index: 1000; /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            overflow: auto; /* Enable scroll if needed */
-            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
-            display: flex; /* Use flex for centering */
-            align-items: center; /* Center vertically */
-            justify-content: center; /* Center horizontally */
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            max-width: 400px;
-            text-align: center;
-            position: relative; /* For close button positioning */
-        }
-
-        .modal-content h3 {
-            color: #E6007A;
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            gap: 10px;
-        }
-
-        .modal-buttons button {
-            width: 48%; /* Adjust width for two buttons */
-            padding: 10px 15px;
-            font-size: 16px;
-            border-radius: 8px;
-            box-shadow: none; /* Remove extra shadow for modal buttons */
-        }
-
-        .modal-buttons button.confirm-yes {
-            background-color: #F44336; /* Red for Yes */
-        }
-        .modal-buttons button.confirm-yes:hover {
-            background-color: #da190b;
-        }
-        .modal-buttons button.confirm-no {
-            background-color: #666; /* Grey for No */
-        }
-        .modal-buttons button.confirm-no:hover {
-            background-color: #555;
-        }
-    </style>
+  <base target="_top">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ระบบแจ้งงานดูดสิ่งปฏิกูล (ปรับปรุง)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{--pink:#FF66B2;--pink-dark:#E6007A;--red:#F44336;--green:#4CAF50;--bg:#F8F8F8;--card:#FFFFFF;--muted:#666;--muted-2:#555;--border:#E0E0E0}
+    *{box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;margin:0;padding:20px;background:var(--bg);color:#333;line-height:1.6}
+    header{max-width:1000px;margin:0 auto 20px;background:var(--card);padding:12px 0;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08);text-align:center}
+    header img{height:80px;width:auto;display:block;margin:0 auto;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+    .container{max-width:1000px;margin:0 auto;background:var(--card);padding:24px;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08)}
+    h2{color:var(--pink-dark);text-align:center;margin:8px 0 18px;font-weight:700}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .col-6{grid-column:span 6}.col-4{grid-column:span 4}.col-12{grid-column:span 12}
+    @media (max-width:768px){.col-6,.col-4{grid-column:span 12}}
+    .form-group label{display:block;margin:0 0 6px;font-weight:600;color:var(--muted-2)}
+    input[type="text"],input[type="tel"],input[type="number"],textarea,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:16px;transition:border-color .2s}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--pink)}
+    input[type="checkbox"]{transform:scale(1.1);margin-right:6px}
+    button{background:var(--pink);color:#fff;border:0;border-radius:8px;padding:12px 16px;cursor:pointer;font-size:16px;font-weight:700;transition:background .2s,transform .08s;box-shadow:0 2px 5px rgba(0,0,0,.08)}
+    button:hover{background:var(--pink-dark)}
+    button:active{transform:translateY(1px)}
+    .btn-outline{background:#f5f5f5;color:#333}
+    .row-actions{display:flex;gap:6px;justify-content:center}
+    .btn-green{background:var(--green)}.btn-green:hover{background:#3e8e41}
+    .btn-red{background:var(--red)}.btn-red:hover{background:#da190b}
+    .message{margin-top:14px;padding:12px;border-radius:8px;text-align:center;display:none;font-weight:600}
+    .success{background:#E0FFE0;color:#1A7A1A;border:1px solid #B3FFB3}
+    .error{background:#FFE0E0;color:#A03333;border:1px solid #FFB3B3}
+    .info{background:#E8F4FF;color:#1f4b7a;border:1px solid #b7dcff}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;background:var(--card);padding:8px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);margin-bottom:16px}
+    .tab{flex:1 1 30%;background:#F0F0F0;color:#666;border:0;border-radius:8px;padding:12px 18px}
+    .tab.active{background:var(--pink);color:#fff;box-shadow:0 3px 8px rgba(255,102,178,.3)}
+    .tab-content{display:none}.tab-content.active{display:block}
+    table{width:100%;border-collapse:collapse;margin-top:10px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+    th,td{border:1px solid #f0f0f0;padding:10px;text-align:left;vertical-align:top}
+    th{background:#F8F8F8;font-weight:700;color:#555}
+    .toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 6px;flex-wrap:wrap}
+    .chart-container{position:relative;width:100%;height:340px;margin-top:16px;background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);padding:12px}
+    footer{text-align:center;margin:20px auto 0;padding:16px;background:#FFF0F5;color:var(--pink-dark);border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08);font-size:14px;font-weight:600;max-width:1000px}
+    .modal{display:none;position:fixed;z-index:1000;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
+    .modal .content{background:#fff;border-radius:12px;max-width:420px;width:92%;padding:20px;box-shadow:0 5px 15px rgba(0,0,0,.25)}
+    .modal h3{color:var(--pink-dark);margin:0 0 10px}
+    .modal .actions{display:flex;gap:8px;justify-content:space-between;margin-top:14px}
+    .pagination{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:8px}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
+    .badge.green{background:#E8F5E9;color:#1B5E20}
+    .badge.red{background:#FFEBEE;color:#B71C1C}
+  </style>
 </head>
 <body>
-    <header>
-        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Seal_of_Ko_Samui.png" alt="Seal of Ko Samui Logo">
-    </header>
-    <div class="container">
-        <h2>ระบบแจ้งงานดูดสิ่งปฏิกูล</h2>
+  <header>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Seal_of_Ko_Samui.png" alt="ตราเทศบาลนครเกาะสมุย" />
+  </header>
+  <div class="container">
+    <h2>ระบบแจ้งงานดูดสิ่งปฏิกูล</h2>
 
-        <!-- Tab Buttons -->
-        <div class="tab-buttons">
-            <button class="tab-button active" onclick="showTab('addBookingTab', event)">ระบบจอง</button>
-            <button class="tab-button" onclick="showTab('searchReportTab', event)">ค้นหาและรายงานผล</button>
-            <button class="tab-button" onclick="showTab('statsTab', event)">สถิติ</button>
-        </div>
-
-        <!-- Add Booking Tab Content -->
-        <div id="addBookingTab" class="tab-content active">
-            <form id="bookingForm">
-                <div class="form-group">
-                    <label for="name">ชื่อลูกค้า:</label>
-                    <input type="text" id="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="phone">เบอร์โทรศัพท์:</label>
-                    <input type="tel" id="phone" required>
-                </div>
-                <div class="form-group">
-                    <label for="house_number">เลขที่บ้าน:</label>
-                    <input type="text" id="house_number">
-                </div>
-                <div class="form-group">
-                    <label for="village_number">หมู่บ้าน:</label>
-                    <input type="text" id="village_number">
-                </div>
-                <div class="form-group">
-                    <label for="subdistrict">ตำบล:</label>
-                    <select id="subdistrict">
-                        <option value="">เลือกตำบล</option>
-                        <option value="อ่างทอง">อ่างทอง</option>
-                        <option value="ลิปะน้อย">ลิปะน้อย</option>
-                        <option value="ตลิ่งงาม">ตลิ่งงาม</option>
-                        <option value="หน้าเมือง">หน้าเมือง</option>
-                        <option value="มะเร็ต">มะเร็ต</option>
-                        <option value="บ่อผุด">บ่อผุด</option>
-                        <option value="แม่น้ำ">แม่น้ำ</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="staff">พนักงานผู้รับผิดชอบ:</label>
-                    <select id="staff">
-                        <option value="">เลือกพนักงาน</option>
-                        <option value="ศุภชัย เปี่ยมประถม">ศุภชัย เปี่ยมประถม</option>
-                        <option value="ไพรวัลย์ คำชาลี">ไพรวัลย์ คำชาลี</option>
-                        <option value="ชวลิต ใจแผ้ว">ชวลิต ใจแผ้ว</option>
-                        <option value="ชาคริต ปัญญา">ชาคริต ปัญญา</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="amount">ค่าบริการ (บาท):</label>
-                    <input type="number" id="amount" step="0.01" value="0">
-                </div>
-                <div class="form-group">
-                    <input type="checkbox" id="paid">
-                    <label for="paid" style="display: inline;">ชำระแล้ว</label>
-                </div>
-                <div class="form-group">
-                    <input type="checkbox" id="completed">
-                    <label for="completed" style="display: inline;">งานเสร็จสิ้น</label>
-                </div>
-                <div class="form-group">
-                    <label for="notes">หมายเหตุ:</label>
-                    <textarea id="notes" rows="3"></textarea>
-                </div>
-                <button type="submit">แจ้งงาน</button>
-            </form>
-            <div id="message" class="message"></div>
-        </div>
-
-        <!-- Search and Report Tab Content -->
-        <div id="searchReportTab" class="tab-content">
-            <div class="search-filters">
-                <div class="form-group">
-                    <label for="searchName">ชื่อลูกค้า/เบอร์โทร:</label>
-                    <input type="text" id="searchName" placeholder="ค้นหาด้วยชื่อหรือเบอร์โทร">
-                </div>
-                <div class="form-group">
-                    <label for="filterStaff">พนักงาน:</label>
-                    <select id="filterStaff">
-                        <option value="">ทั้งหมด</option>
-                        <option value="ศุภชัย เปี่ยมประถม">ศุภชัย เปี่ยมประถม</option>
-                        <option value="ไพรวัลย์ คำชาลี">ไพรวัลย์ คำชาลี</option>
-                        <option value="ชวลิต ใจแผ้ว">ชวลิต ใจแผ้ว</option>
-                        <option value="ชาคริต ปัญญา">ชาคริต ปัญญา</option>
-                    </select>
-                </div>
-                 <div class="form-group">
-                    <label for="filterSubdistrict">ตำบล:</label>
-                    <select id="filterSubdistrict">
-                        <option value="">ทั้งหมด</option>
-                        <option value="อ่างทอง">อ่างทอง</option>
-                        <option value="ลิปะน้อย">ลิปะน้อย</option>
-                        <option value="ตลิ่งงาม">ตลิ่งงาม</option>
-                        <option value="หน้าเมือง">หน้าเมือง</option>
-                        <option value="มะเร็ต">มะเร็ต</option>
-                        <option value="บ่อผุด">บ่อผุด</option>
-                        <option value="แม่น้ำ">แม่น้ำ</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="filterCompleted">สถานะงาน:</label>
-                    <select id="filterCompleted">
-                        <option value="">ทั้งหมด</option>
-                        <option value="Yes">เสร็จสิ้น</option>
-                        <option value="No">ยังไม่เสร็จสิ้น</option>
-                    </select>
-                </div>
-                <button onclick="applyFilters()">ค้นหา/กรอง</button>
-            </div>
-            <div id="bookingsTableContainer">
-                <!-- Filtered bookings will be loaded here -->
-            </div>
-            <div id="viewMessage" class="message"></div>
-        </div>
-
-        <!-- Statistics Tab Content -->
-        <div id="statsTab" class="tab-content">
-            <h3>สรุปสถิติ</h3>
-            <div id="statsContent">
-                <!-- Statistics will be loaded here -->
-                <p><strong>จำนวนงานทั้งหมด:</strong> <span id="totalBookings">0</span></p>
-                <p><strong>งานที่เสร็จสิ้น:</strong> <span id="completedBookings">0</span></p>
-                <p><strong>งานที่ยังไม่เสร็จสิ้น:</strong> <span id="incompleteBookings">0</span></p>
-                <p><strong>ยอดรวมค่าบริการทั้งหมด:</strong> <span id="totalAmount">0</span> บาท</p>
-                <h4>งานต่อพนักงาน:</h4>
-                <ul id="staffStatsList"></ul>
-
-                <!-- Chart for Staff Performance -->
-                <div class="chart-container">
-                    <canvas id="staffPerformanceChart"></canvas>
-                </div>
-
-                <!-- Chart for Monthly Services -->
-                <div class="chart-container">
-                    <canvas id="monthlyServicesChart"></canvas>
-                </div>
-
-                <!-- Chart for Paid vs Free Services -->
-                <div class="chart-container">
-                    <canvas id="paidFreeChart"></canvas>
-                </div>
-
-                <!-- Chart for Monthly Revenue -->
-                <div class="chart-container">
-                    <canvas id="monthlyRevenueChart"></canvas>
-                </div>
-
-                <!-- Chart for Subdistrict Volume -->
-                <div class="chart-container">
-                    <canvas id="subdistrictVolumeChart"></canvas>
-                </div>
-            </div>
-            <div id="statsMessage" class="message"></div>
-        </div>
-
-    </div>
-    <footer>
-        <p>&copy;2025 ระบบให้บริการรถดูดสิ่งปฏิกูล กองช่างสุขาภิบาล โดย นายธีรศักดิ์ พูลเขาล้าน</p>
-    </footer>
-
-    <!-- Custom Confirmation Modal -->
-    <div id="confirmModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <h3 id="modalTitle">ยืนยันการลบ?</h3>
-            <p id="modalBody">คุณต้องการลบรายการนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
-            <div class="modal-buttons">
-                <button class="confirm-yes" id="confirmYesBtn">ใช่</button>
-                <button class="confirm-no" id="confirmNoBtn">ไม่</button>
-            </div>
-        </div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="add">ระบบจอง</button>
+      <button class="tab" data-tab="search">ค้นหาและรายงานผล</button>
+      <button class="tab" data-tab="stats">สถิติ</button>
     </div>
 
-    <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyahkXofdS557MnH_9nHJm7K_a5Lo7LNIp87_E4ly2wiJ9zg50tZjNkWIXha1ExVcUpA/exec';
+    <!-- Add Booking -->
+    <section id="tab-add" class="tab-content active" aria-labelledby="tab-add">
+      <form id="bookingForm" novalidate>
+        <div class="grid">
+          <div class="form-group col-6">
+            <label for="name">ชื่อลูกค้า <span class="badge red" id="nameErr" style="display:none">จำเป็น</span></label>
+            <input id="name" type="text" required autocomplete="name" />
+          </div>
+          <div class="form-group col-6">
+            <label for="phone">เบอร์โทรศัพท์</label>
+            <input id="phone" type="tel" inputmode="tel" placeholder="0XXXXXXXXX" pattern="^0[0-9]{8,9}$" />
+          </div>
+          <div class="form-group col-4">
+            <label for="house_number">เลขที่บ้าน</label>
+            <input id="house_number" type="text" />
+          </div>
+          <div class="form-group col-4">
+            <label for="village_number">หมู่บ้าน</label>
+            <input id="village_number" type="text" />
+          </div>
+          <div class="form-group col-4">
+            <label for="subdistrict">ตำบล</label>
+            <select id="subdistrict"></select>
+          </div>
+          <div class="form-group col-6">
+            <label for="staff">พนักงานผู้รับผิดชอบ</label>
+            <select id="staff"></select>
+          </div>
+          <div class="form-group col-6">
+            <label for="amount">ค่าบริการ (บาท)</label>
+            <input id="amount" type="number" min="0" step="0.01" value="0" />
+          </div>
+          <div class="form-group col-6">
+            <label><input id="paid" type="checkbox" /> ชำระแล้ว</label>
+          </div>
+          <div class="form-group col-6">
+            <label><input id="completed" type="checkbox" /> งานเสร็จสิ้น</label>
+          </div>
+          <div class="form-group col-12">
+            <label for="notes">หมายเหตุ</label>
+            <textarea id="notes" rows="3"></textarea>
+          </div>
+          <div class="col-12">
+            <button id="submitBtn" type="submit">แจ้งงาน</button>
+          </div>
+        </div>
+      </form>
+      <div id="message" class="message"></div>
+    </section>
 
-        // Static lists for dropdowns
-        const STAFF_OPTIONS = [
-            "ศุภชัย เปี่ยมประถม",
-            "ไพรวัลย์ คำชาลี",
-            "ชวลิต ใจแผ้ว",
-            "ชาคริต ปัญญา"
-        ];
+    <!-- Search & Report -->
+    <section id="tab-search" class="tab-content" aria-labelledby="tab-search">
+      <div class="toolbar">
+        <div class="grid" style="width:100%">
+          <div class="form-group col-4">
+            <label for="searchName">ชื่อลูกค้า/เบอร์โทร</label>
+            <input id="searchName" type="text" placeholder="ค้นหาด้วยชื่อหรือเบอร์โทร" />
+          </div>
+          <div class="form-group col-3">
+            <label for="filterStaff">พนักงาน</label>
+            <select id="filterStaff"></select>
+          </div>
+          <div class="form-group col-3">
+            <label for="filterSubdistrict">ตำบล</label>
+            <select id="filterSubdistrict"></select>
+          </div>
+          <div class="form-group col-2">
+            <label for="filterCompleted">สถานะงาน</label>
+            <select id="filterCompleted">
+              <option value="">ทั้งหมด</option>
+              <option value="Yes">เสร็จสิ้น</option>
+              <option value="No">ยังไม่เสร็จสิ้น</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:end">
+          <button id="btnFilter" class="btn-outline">ค้นหา/กรอง</button>
+          <button id="btnExport" class="btn-outline">Export CSV</button>
+        </div>
+      </div>
+      <div id="bookingsTableContainer"></div>
+      <div class="pagination" id="pagination" style="display:none">
+        <button class="btn-outline" id="prevPage">ก่อนหน้า</button>
+        <span id="pageInfo"></span>
+        <button class="btn-outline" id="nextPage">ถัดไป</button>
+      </div>
+      <div id="viewMessage" class="message"></div>
+    </section>
 
-        const SUBDISTRICT_OPTIONS = [
-            "อ่างทอง",
-            "ลิปะน้อย",
-            "ตลิ่งงาม",
-            "หน้าเมือง",
-            "มะเร็ต",
-            "บ่อผุด",
-            "แม่น้ำ"
-        ];
+    <!-- Stats -->
+    <section id="tab-stats" class="tab-content" aria-labelledby="tab-stats">
+      <h3>สรุปสถิติ</h3>
+      <div id="statsContent">
+        <p><strong>จำนวนงานทั้งหมด:</strong> <span id="totalBookings">0</span></p>
+        <p><strong>งานที่เสร็จสิ้น:</strong> <span id="completedBookings">0</span></p>
+        <p><strong>งานที่ยังไม่เสร็จสิ้น:</strong> <span id="incompleteBookings">0</span></p>
+        <p><strong>ยอดรวมค่าบริการทั้งหมด:</strong> <span id="totalAmount">0</span> บาท</p>
+        <h4>งานต่อพนักงาน:</h4>
+        <ul id="staffStatsList"></ul>
+        <div class="chart-container"><canvas id="staffPerformanceChart"></canvas></div>
+        <div class="chart-container"><canvas id="monthlyServicesChart"></canvas></div>
+        <div class="chart-container"><canvas id="paidFreeChart"></canvas></div>
+        <div class="chart-container"><canvas id="monthlyRevenueChart"></canvas></div>
+        <div class="chart-container"><canvas id="subdistrictVolumeChart"></canvas></div>
+      </div>
+      <div id="statsMessage" class="message"></div>
+    </section>
+  </div>
 
-        let allBookingsData = []; // Stores all fetched bookings
-        let editingRowTimestamp = null; // Keeps track of which row is currently being edited
+  <footer>
+    <p>&copy;2025 ระบบให้บริการรถดูดสิ่งปฏิกูล กองช่างสุขาภิบาล โดย นายธีรศักดิ์ พูลเขาล้าน</p>
+  </footer>
 
-        // Global chart instances to destroy existing charts before rendering new ones
-        // CHANGED: Declared with 'var' instead of 'let' to avoid redeclaration errors
-        var staffPerformanceChart = null;
-        var monthlyServicesChart = null;
-        var paidFreeChart = null;
-        var monthlyRevenueChart = null;
-        var subdistrictVolumeChart = null;
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal" style="display:none">
+    <div class="content">
+      <h3 id="modalTitle">ยืนยันการลบ?</h3>
+      <p id="modalBody">คุณต้องการลบรายการนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้</p>
+      <div class="actions">
+        <button class="btn-red" id="confirmYesBtn">ใช่</button>
+        <button class="btn-outline" id="confirmNoBtn">ไม่</button>
+      </div>
+    </div>
+  </div>
 
+  <script>
+  'use strict';
+  // =================== CONFIG ===================
+  const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyahkXofdS557MnH_9nHJm7K_a5Lo7LNIp87_E4ly2wiJ9zg50tZjNkWIXha1ExVcUpA/exec';
+  const STAFF_OPTIONS = ["ศุภชัย เปี่ยมประถม","ไพรวัลย์ คำชาลี","ชวลิต ใจแผ้ว","ชาคริต ปัญญา"];
+  const SUBDISTRICT_OPTIONS = ["อ่างทอง","ลิปะน้อย","ตลิ่งงาม","หน้าเมือง","มะเร็ต","บ่อผุด","แม่น้ำ"];
+  const RATE_PER_CUBIC_METER = 250; // บาท/ลบ.ม.
 
-        // Helper to get last 12 months in 'YYYY-MM' format for data processing
-        function getLast12MonthsFormatted() {
-            const months = [];
-            const today = new Date();
-            for (let i = 0; i < 12; i++) {
-                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                months.unshift(`${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}`);
-            }
-            return months;
+  // =================== STATE ===================
+  let allBookingsData = [];
+  let editingRowTimestamp = null;
+  let deleteConfirmTimestamp = null;
+  let filteredCache = [];
+  let currentPage = 1;
+  const perPage = 20;
+
+  // Chart instances
+  let staffPerformanceChart = null;
+  let monthlyServicesChart = null;
+  let paidFreeChart = null;
+  let monthlyRevenueChart = null;
+  let subdistrictVolumeChart = null;
+
+  // =================== UTILS ===================
+  const nf = new Intl.NumberFormat('th-TH');
+  const nfc = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  function getLast12MonthsFormatted(){
+    const months = [];
+    const today = new Date();
+    for(let i=0;i<12;i++){
+      const d = new Date(today.getFullYear(), today.getMonth()-i, 1);
+      months.unshift(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    }
+    return months;
+  }
+  function formatMonthYearToThai(ym){
+    const [y,m] = ym.split('-');
+    const d = new Date(Number(y), Number(m)-1, 1);
+    return d.toLocaleString('th-TH', { month: 'long', year: 'numeric' });
+  }
+  function debounce(fn, ms=300){
+    let t;
+    return function debounced(){
+      const args = arguments;
+      clearTimeout(t);
+      t = setTimeout(function(){ fn.apply(null, args); }, ms);
+    };
+  }
+  function displayMessage(msg, type, target='message'){
+    const el = document.getElementById(target);
+    el.textContent = msg;
+    el.className = `message ${type}`;
+    el.style.display = 'block';
+  }
+  function populateSelectOptions(){
+    const staffNodes = [document.getElementById('staff'), document.getElementById('filterStaff')];
+    staffNodes.forEach(function(sel){
+      sel.innerHTML = '<option value="">' + (sel.id==='filterStaff'?'ทั้งหมด':'เลือกพนักงาน') + '</option>' +
+        STAFF_OPTIONS.map(function(o){ return `<option value="${o}">${o}</option>`; }).join('');
+    });
+    const subNodes = [document.getElementById('subdistrict'), document.getElementById('filterSubdistrict')];
+    subNodes.forEach(function(sel){
+      sel.innerHTML = '<option value="">' + (sel.id==='filterSubdistrict'?'ทั้งหมด':'เลือกตำบล') + '</option>' +
+        SUBDISTRICT_OPTIONS.map(function(o){ return `<option value="${o}">${o}</option>`; }).join('');
+    });
+  }
+  function saveActiveTabToStorage(id){ localStorage.setItem('fecal.activeTab', id); }
+  function getActiveTabFromStorage(){ return localStorage.getItem('fecal.activeTab') || 'add'; }
+
+  // Safe HTML escape
+  function sanitize(str){
+    const s = String(str == null ? '' : str);
+    return s.replace(/[&<>"']/g, function(ch){
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      return map[ch];
+    });
+  }
+
+  // JSONP helper (no eval)
+  function fetchJSONP(url, callbackParam){
+    if(!callbackParam){ callbackParam = 'callback'; }
+    return new Promise(function(resolve, reject){
+      const cbName = 'jsonp_cb_' + Math.random().toString(36).slice(2);
+      const script = document.createElement('script');
+      const sep = url.indexOf('?') !== -1 ? '&' : '?';
+      let finished = false;
+      const timeout = setTimeout(function(){ done(new Error('JSONP timeout')); }, 15000);
+      function done(err, data){
+        if(finished) return; finished = true;
+        clearTimeout(timeout);
+        if(script.parentNode){ script.parentNode.removeChild(script); }
+        delete window[cbName];
+        if(err){ reject(err); } else { resolve(data); }
+      }
+      window[cbName] = function(data){ done(null, data); };
+      script.src = url + sep + callbackParam + '=' + cbName;
+      script.onerror = function(){ done(new Error('JSONP network error')); };
+      document.body.appendChild(script);
+    });
+  }
+  function appsScriptRequest(action, payload){
+    const base = WEB_APP_URL + '?action=' + encodeURIComponent(action);
+    if(payload){
+      return fetchJSONP(base + '&data=' + encodeURIComponent(JSON.stringify(payload)), 'callback');
+    }
+    return fetchJSONP(base, 'callback');
+  }
+
+  // =================== TABS ===================
+  document.querySelectorAll('.tab').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      const id = btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-content').forEach(function(s){ s.classList.remove('active'); });
+      document.getElementById('tab-' + id).classList.add('active');
+      saveActiveTabToStorage(id);
+      if(id==='search'){ fetchAndRenderAllBookings(false); }
+      if(id==='stats'){ fetchAndRenderAllBookings(true); }
+    });
+  });
+
+  // =================== ADD BOOKING ===================
+  document.getElementById('bookingForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const name = document.getElementById('name');
+    const phone = document.getElementById('phone');
+    const nameErr = document.getElementById('nameErr');
+    nameErr.style.display = name.value.trim() ? 'none' : 'inline-block';
+    if(!name.value.trim()){ name.focus(); return; }
+    if(phone.value && !/^0\d{8,9}$/.test(phone.value)){
+      displayMessage('รูปแบบเบอร์โทรไม่ถูกต้อง','error');
+      phone.focus();
+      return;
+    }
+
+    const bookingData = {
+      timestamp: new Date().toISOString(),
+      name: name.value.trim(),
+      phone: phone.value.trim(),
+      house_number: document.getElementById('house_number').value.trim(),
+      village_number: document.getElementById('village_number').value.trim(),
+      subdistrict: document.getElementById('subdistrict').value,
+      staff: document.getElementById('staff').value,
+      amount: parseFloat(document.getElementById('amount').value) || 0,
+      paid: document.getElementById('paid').checked,
+      completed: document.getElementById('completed').checked,
+      notes: document.getElementById('notes').value.trim()
+    };
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'กำลังส่ง...';
+    appsScriptRequest('addBooking', bookingData)
+      .then(function(res){
+        if(res && res.success){
+          displayMessage('แจ้งงานสำเร็จ!','success');
+          document.getElementById('bookingForm').reset();
+          document.getElementById('staff').value = '';
+          document.getElementById('subdistrict').value = '';
+        } else {
+          displayMessage('แจ้งงานไม่สำเร็จ: ' + (res && res.error ? res.error : 'ไม่ทราบสาเหตุ'),'error');
         }
+      })
+      .catch(function(err){ displayMessage('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + err.message,'error'); })
+      .finally(function(){ btn.disabled = false; btn.textContent = 'แจ้งงาน'; });
+  });
 
-        // Helper to format 'YYYY-MM' to readable month name (e.g., "มกราคม 2567")
-        function formatMonthYearToThai(ym) {
-            const [year, month] = ym.split('-');
-            const date = new Date(parseInt(year), parseInt(month) - 1, 1);
-            return date.toLocaleString('th-TH', { month: 'long', year: 'numeric' });
+  // =================== SEARCH & REPORT ===================
+  document.getElementById('btnFilter').addEventListener('click', function(){ applyFilters(); });
+  document.getElementById('searchName').addEventListener('input', debounce(applyFilters, 350));
+  document.getElementById('filterStaff').addEventListener('change', applyFilters);
+  document.getElementById('filterSubdistrict').addEventListener('change', applyFilters);
+  document.getElementById('filterCompleted').addEventListener('change', applyFilters);
+
+  document.getElementById('prevPage').addEventListener('click', function(){ if(currentPage>1){ currentPage--; renderBookingsTable(filteredCache); } });
+  document.getElementById('nextPage').addEventListener('click', function(){ const max = Math.ceil(filteredCache.length / perPage) || 1; if(currentPage < max){ currentPage++; renderBookingsTable(filteredCache); } });
+
+  document.getElementById('btnExport').addEventListener('click', function(){
+    if(!filteredCache.length){ displayMessage('ไม่มีข้อมูลสำหรับส่งออก','info','viewMessage'); return; }
+    const headers = Object.keys(filteredCache[0]);
+    const csv = [headers.join(',')]
+      .concat(filteredCache.map(function(o){
+        return headers.map(function(h){
+          const cell = String(o[h] == null ? '' : o[h]).replace(/\"/g, '""');
+          return '"' + cell + '"';
+        }).join(',');
+      }))
+      .join('\n');
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'bookings.csv'; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  function fetchAndRenderAllBookings(forStats){
+    if(forStats == null){ forStats = false; }
+    const msgId = forStats ? 'statsMessage' : 'viewMessage';
+    document.getElementById(msgId).style.display = 'none';
+    if(!forStats){
+      document.getElementById('bookingsTableContainer').innerHTML = '<p>กำลังโหลดข้อมูล...</p>';
+    } else {
+      ['totalBookings','completedBookings','incompleteBookings','totalAmount'].forEach(function(id){ document.getElementById(id).textContent = 'กำลังโหลด...'; });
+      document.getElementById('staffStatsList').innerHTML = '<li>กำลังโหลด...</li>';
+      destroyAllChartsAndResetCanvases();
+    }
+    appsScriptRequest('getBookings')
+      .then(function(res){
+        if(res && res.success){
+          allBookingsData = res.data || [];
+          if(forStats){ renderStatistics(allBookingsData); } else { applyFilters(); }
+        } else {
+          displayMessage('ไม่สามารถโหลดข้อมูลได้: ' + (res && res.error ? res.error : 'ไม่ทราบสาเหตุ'),'error',msgId);
+          if(!forStats){ document.getElementById('bookingsTableContainer').innerHTML = ''; }
         }
+      })
+      .catch(function(err){
+        displayMessage('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + err.message,'error',msgId);
+        if(!forStats){ document.getElementById('bookingsTableContainer').innerHTML = ''; }
+      });
+  }
 
+  function applyFilters(){
+    const search = document.getElementById('searchName').value.toLowerCase();
+    const fStaff = document.getElementById('filterStaff').value;
+    const fSub = document.getElementById('filterSubdistrict').value;
+    const fCompleted = document.getElementById('filterCompleted').value;
+    filteredCache = allBookingsData.filter(function(b){
+      const byName = !search || (String(b.name||'').toLowerCase().includes(search) || String(b.phone||'').toLowerCase().includes(search));
+      const byStaff = !fStaff || b.staff === fStaff;
+      const bySub = !fSub || b.subdistrict === fSub;
+      const byComp = !fCompleted || (fCompleted === 'Yes' ? b.completed === true : b.completed === false);
+      return byName && byStaff && bySub && byComp;
+    });
+    currentPage = 1;
+    renderBookingsTable(filteredCache);
+  }
 
-        // --- Tab Switching Logic ---
-        function showTab(tabId, event) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.getElementById(tabId).classList.add('active');
+  function renderBookingsTable(rows){
+    const container = document.getElementById('bookingsTableContainer');
+    if(!rows.length){
+      container.innerHTML = '<p>ไม่พบรายการงานที่ตรงกับเงื่อนไขการค้นหา</p>';
+      document.getElementById('pagination').style.display = 'none';
+      return;
+    }
 
-            document.querySelectorAll('.tab-button').forEach(button => {
-                button.classList.remove('active');
-            });
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            } else {
-                document.querySelector('.tab-buttons .tab-button').classList.add('active');
-            }
+    const headers = Object.keys(rows[0]);
+    const start = (currentPage - 1) * perPage;
+    const end = start + perPage;
+    const pageRows = rows.slice(start, end);
+    const totalPages = Math.ceil(rows.length / perPage) || 1;
+    document.getElementById('pagination').style.display = totalPages > 1 ? 'flex' : 'none';
+    document.getElementById('pageInfo').textContent = 'หน้า ' + currentPage + ' / ' + totalPages;
 
-            // Load data based on the activated tab
-            if (tabId === 'searchReportTab') {
-                fetchAndRenderAllBookings();
-            } else if (tabId === 'statsTab') {
-                fetchAndRenderAllBookings(true);
-            }
+    var html = '<table><thead><tr>';
+    headers.filter(function(h){ return h.toLowerCase() !== 'timestamp'; }).forEach(function(h){
+      const display = h.replace(/([A-Z])/g,' $1').replace(/^./,function(c){ return c.toUpperCase(); });
+      html += '<th>' + sanitize(display) + '</th>';
+    });
+    html += '<th>การทำงาน</th></tr></thead><tbody>';
+
+    pageRows.forEach(function(b){
+      html += '<tr data-timestamp="' + sanitize(b.timestamp) + '">';
+      headers.filter(function(h){ return h.toLowerCase() !== 'timestamp'; }).forEach(function(h){
+        var val = b[h];
+        if(h === 'paid' || h === 'completed'){ val = val ? 'Yes' : 'No'; }
+        html += '<td><span class="display-mode">' + sanitize(val) + '</span>' + renderEditControl(h, b) + '</td>';
+      });
+      html += '<td><div class="row-actions">\
+        <button class="edit-btn btn-outline">แก้ไข</button>\
+        <button class="save-btn btn-green" style="display:none">บันทึก</button>\
+        <button class="cancel-btn btn-outline" style="display:none">ยกเลิก</button>\
+        <button class="delete-btn btn-red">ลบ</button>\
+      </div></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function renderEditControl(field, b){
+    const val = b[field] == null ? '' : b[field];
+    if(field === 'amount'){
+      return '<input class="edit-mode" data-field="amount" type="number" step="0.01" min="0" value="' + sanitize(val) + '" style="display:none;width:120px">';
+    }
+    if(field === 'paid'){
+      return '<input class="edit-mode" data-field="paid" type="checkbox" ' + (b.paid ? 'checked' : '') + ' style="display:none">';
+    }
+    if(field === 'completed'){
+      return '<select class="edit-mode" data-field="completed" style="display:none">' +
+             '<option value="true" ' + (b.completed ? 'selected' : '') + '>Yes</option>' +
+             '<option value="false" ' + (!b.completed ? 'selected' : '') + '>No</option>' +
+             '</select>';
+    }
+    if(field === 'staff'){
+      return '<select class="edit-mode" data-field="staff" style="display:none">' +
+             '<option value="">เลือกพนักงาน</option>' +
+             STAFF_OPTIONS.map(function(o){ return '<option ' + (o===b.staff?'selected':'') + ' value="' + sanitize(o) + '">' + sanitize(o) + '</option>'; }).join('') +
+             '</select>';
+    }
+    if(field === 'subdistrict'){
+      return '<select class="edit-mode" data-field="subdistrict" style="display:none">' +
+             '<option value="">เลือกตำบล</option>' +
+             SUBDISTRICT_OPTIONS.map(function(o){ return '<option ' + (o===b.subdistrict?'selected':'') + ' value="' + sanitize(o) + '">' + sanitize(o) + '</option>'; }).join('') +
+             '</select>';
+    }
+    return '<input class="edit-mode" data-field="' + sanitize(field) + '" type="text" value="' + sanitize(val) + '" style="display:none;min-width:140px">';
+  }
+
+  const originalRowValues = Object.create(null);
+
+  // Event delegation for table actions
+  document.getElementById('bookingsTableContainer').addEventListener('click', function(e){
+    const btn = e.target.closest('button');
+    if(!btn){ return; }
+    const row = e.target.closest('tr');
+    if(!row){ return; }
+    const ts = row.getAttribute('data-timestamp');
+    if(btn.classList.contains('edit-btn')){ enterEditMode(row, ts); }
+    else if(btn.classList.contains('save-btn')){ saveBooking(row, ts); }
+    else if(btn.classList.contains('cancel-btn')){ cancelEdit(row, ts); }
+    else if(btn.classList.contains('delete-btn')){ showConfirmModal(ts, row.querySelector('td').innerText.trim()); }
+  });
+
+  function enterEditMode(row, timestamp){
+    editingRowTimestamp = timestamp;
+    const booking = allBookingsData.find(function(b){ return b.timestamp === timestamp; });
+    originalRowValues[timestamp] = booking ? JSON.parse(JSON.stringify(booking)) : {};
+    row.querySelectorAll('.display-mode').forEach(function(s){ s.style.display='none'; });
+    row.querySelectorAll('.edit-mode').forEach(function(el){ el.style.display = (el.type === 'checkbox' ? 'inline' : 'inline-block'); });
+    row.querySelector('.edit-btn').style.display='none';
+    row.querySelector('.save-btn').style.display='inline-block';
+    row.querySelector('.cancel-btn').style.display='inline-block';
+    row.querySelector('.delete-btn').style.display='none';
+  }
+
+  function saveBooking(row, timestamp){
+    const updated = { timestamp: timestamp };
+    row.querySelectorAll('.edit-mode').forEach(function(el){
+      const field = el.getAttribute('data-field');
+      if(!field){ return; }
+      if(el.tagName === 'SELECT'){
+        updated[field] = (field === 'completed') ? (el.value === 'true') : el.value;
+      } else if(el.type === 'checkbox'){
+        updated[field] = !!el.checked;
+      } else if(el.type === 'number'){
+        updated[field] = parseFloat(el.value) || 0;
+      } else {
+        updated[field] = el.value;
+      }
+    });
+    displayMessage('กำลังบันทึกข้อมูล...','info','viewMessage');
+    appsScriptRequest('updateBooking', updated)
+      .then(function(res){
+        if(res && res.success){
+          displayMessage('บันทึกข้อมูลสำเร็จ!','success','viewMessage');
+          fetchAndRenderAllBookings(false);
+          editingRowTimestamp = null;
+        } else {
+          displayMessage('บันทึกข้อมูลไม่สำเร็จ: ' + (res && res.error ? res.error : 'ไม่ทราบสาเหตุ'),'error','viewMessage');
         }
+      })
+      .catch(function(err){
+        displayMessage('เกิดข้อผิดพลาดในการบันทึก: ' + err.message,'error','viewMessage');
+        exitEditMode(row);
+      });
+  }
 
-        // --- Data Fetching Logic ---
-        function fetchAndRenderAllBookings(forStats = false) {
-            const messageDiv = forStats ? document.getElementById('statsMessage') : document.getElementById('viewMessage');
-            messageDiv.style.display = 'none';
+  function cancelEdit(row, timestamp){
+    const original = originalRowValues[timestamp];
+    if(original){
+      row.querySelectorAll('.edit-mode').forEach(function(el){
+        const f = el.getAttribute('data-field');
+        if(!(f in original)){ return; }
+        if(el.type === 'checkbox'){ el.checked = !!original[f]; }
+        else { el.value = original[f]; }
+      });
+    }
+    exitEditMode(row);
+  }
 
-            if (!forStats) {
-                document.getElementById('bookingsTableContainer').innerHTML = '<p>กำลังโหลดข้อมูล...</p>';
-            } else {
-                // Reset stats content with loading indicators
-                document.getElementById('totalBookings').textContent = 'กำลังโหลด...';
-                document.getElementById('completedBookings').textContent = 'กำลังโหลด...';
-                document.getElementById('incompleteBookings').textContent = 'กำลังโหลด...';
-                document.getElementById('totalAmount').textContent = 'กำลังโหลด...';
-                document.getElementById('staffStatsList').innerHTML = '<p>กำลังโหลด...</p>';
+  function exitEditMode(row){
+    row.querySelectorAll('.display-mode').forEach(function(s){ s.style.display='inline'; });
+    row.querySelectorAll('.edit-mode').forEach(function(el){ el.style.display='none'; });
+    row.querySelector('.edit-btn').style.display='inline-block';
+    row.querySelector('.save-btn').style.display='none';
+    row.querySelector('.cancel-btn').style.display='none';
+    row.querySelector('.delete-btn').style.display='inline-block';
+  }
 
-                // Destroy existing charts before rendering new ones to prevent canvas issues
-                if (staffPerformanceChart) staffPerformanceChart.destroy();
-                if (monthlyServicesChart) monthlyServicesChart.destroy();
-                if (paidFreeChart) paidFreeChart.destroy();
-                if (monthlyRevenueChart) monthlyRevenueChart.destroy();
-                if (subdistrictVolumeChart) subdistrictVolumeChart.destroy();
-                // Clear canvas elements by setting innerHTML (safer way to re-initialize for Chart.js)
-                document.getElementById('staffPerformanceChart').outerHTML = '<canvas id="staffPerformanceChart"></canvas>';
-                document.getElementById('monthlyServicesChart').outerHTML = '<canvas id="monthlyServicesChart"></canvas>';
-                document.getElementById('paidFreeChart').outerHTML = '<canvas id="paidFreeChart"></canvas>';
-                document.getElementById('monthlyRevenueChart').outerHTML = '<canvas id="monthlyRevenueChart"></canvas>';
-                document.getElementById('subdistrictVolumeChart').outerHTML = '<canvas id="subdistrictVolumeChart"></canvas>';
-            }
-
-            const url = `${WEB_APP_URL}?action=getBookings&callback=handleGetBookingsResponse`;
-
-            fetch(url)
-                .then(response => response.text())
-                .then(text => {
-                    eval(text);
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    displayMessage('เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + error.message, 'error', forStats ? 'statsMessage' : 'viewMessage');
-                    if (!forStats) {
-                        document.getElementById('bookingsTableContainer').innerHTML = '';
-                    } else {
-                        document.getElementById('totalBookings').textContent = '0';
-                        document.getElementById('completedBookings').textContent = '0';
-                        document.getElementById('incompleteBookings').textContent = '0';
-                        document.getElementById('totalAmount').textContent = '0';
-                        document.getElementById('staffStatsList').innerHTML = '';
-                    }
-                });
+  function showConfirmModal(timestamp, name){
+    deleteConfirmTimestamp = timestamp;
+    document.getElementById('modalTitle').textContent = 'ยืนยันการลบรายการ?';
+    document.getElementById('modalBody').innerHTML = 'คุณต้องการลบรายการของ <strong>' + sanitize(name) + '</strong> ใช่หรือไม่? <br>การกระทำนี้ไม่สามารถย้อนกลับได้';
+    document.getElementById('confirmModal').style.display = 'flex';
+  }
+  function hideConfirmModal(){
+    document.getElementById('confirmModal').style.display = 'none';
+    deleteConfirmTimestamp = null;
+  }
+  document.getElementById('confirmYesBtn').addEventListener('click', function(){
+    if(!deleteConfirmTimestamp){ return; }
+    hideConfirmModal();
+    displayMessage('กำลังลบข้อมูล...','info','viewMessage');
+    appsScriptRequest('deleteByTimestamp', { timestamp: deleteConfirmTimestamp })
+      .then(function(res){
+        if(res && res.success){
+          displayMessage('ลบข้อมูลสำเร็จ!','success','viewMessage');
+          fetchAndRenderAllBookings(false);
+        } else {
+          displayMessage('ลบข้อมูลไม่สำเร็จ: ' + (res && res.error ? res.error : 'ไม่ทราบสาเหตุ'),'error','viewMessage');
         }
-
-        function handleGetBookingsResponse(response) {
-            const viewMessageDiv = document.getElementById('viewMessage');
-            const statsMessageDiv = document.getElementById('statsMessage');
-            const currentActiveTab = document.querySelector('.tab-content.active').id;
-
-            if (response.success) {
-                allBookingsData = response.data || [];
-
-                if (currentActiveTab === 'searchReportTab') {
-                    applyFilters();
-                } else if (currentActiveTab === 'statsTab') {
-                    renderStatistics(allBookingsData);
-                }
-            } else {
-                if (currentActiveTab === 'searchReportTab') {
-                    viewMessageDiv.textContent = 'ไม่สามารถโหลดข้อมูลได้: ' + response.error;
-                    viewMessageDiv.className = 'message error';
-                    viewMessageDiv.style.display = 'block';
-                    document.getElementById('bookingsTableContainer').innerHTML = '';
-                } else if (currentActiveTab === 'statsTab') {
-                    statsMessageDiv.textContent = 'ไม่สามารถโหลดข้อมูลได้: ' + response.error;
-                    statsMessageDiv.className = 'message error';
-                    statsMessageDiv.style.display = 'block';
-                    renderStatistics([]);
-                }
-            }
-        }
-
-        // --- Add Booking Logic ---
-        document.getElementById('bookingForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const messageDiv = document.getElementById('message');
-            messageDiv.style.display = 'none';
-
-            const bookingData = {
-                timestamp: new Date().toISOString(),
-                name: document.getElementById('name').value,
-                phone: document.getElementById('phone').value,
-                house_number: document.getElementById('house_number').value,
-                village_number: document.getElementById('village_number').value,
-                subdistrict: document.getElementById('subdistrict').value,
-                staff: document.getElementById('staff').value,
-                amount: parseFloat(document.getElementById('amount').value) || 0,
-                paid: document.getElementById('paid').checked,
-                completed: document.getElementById('completed').checked,
-                notes: document.getElementById('notes').value
-            };
-
-            const url = `${WEB_APP_URL}?action=addBooking&data=${encodeURIComponent(JSON.stringify(bookingData))}&callback=handleAddBookingResponse`;
-
-            fetch(url)
-                .then(response => response.text())
-                .then(text => {
-                    eval(text);
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    displayMessage('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + error.message, 'error');
-                });
-        });
-
-        function handleAddBookingResponse(response) {
-            const messageDiv = document.getElementById('message');
-            if (response.success) {
-                displayMessage('แจ้งงานสำเร็จ!', 'success');
-                document.getElementById('bookingForm').reset();
-                document.getElementById('staff').value = ""; // Reset staff dropdown
-                document.getElementById('subdistrict').value = ""; // Reset subdistrict dropdown
-            } else {
-                displayMessage('แจ้งงานไม่สำเร็จ: ' + response.error, 'error');
-            }
-        }
-
-        function displayMessage(msg, type, targetDivId = 'message') { // Added targetDivId for flexibility
-            const messageDiv = document.getElementById(targetDivId);
-            messageDiv.textContent = msg;
-            messageDiv.className = `message ${type}`;
-            messageDiv.style.display = 'block';
-        }
-
-        // --- Search and Report Tab Functions ---
-        function applyFilters() {
-            const searchName = document.getElementById('searchName').value.toLowerCase();
-            const filterStaff = document.getElementById('filterStaff').value;
-            const filterSubdistrict = document.getElementById('filterSubdistrict').value;
-            const filterCompleted = document.getElementById('filterCompleted').value;
-
-            const filteredBookings = allBookingsData.filter(booking => {
-                const matchesName = !searchName ||
-                                    (booking.name && String(booking.name).toLowerCase().includes(searchName)) ||
-                                    (booking.phone && String(booking.phone).toLowerCase().includes(searchName));
-
-                const matchesStaff = !filterStaff || booking.staff === filterStaff;
-                const matchesSubdistrict = !filterSubdistrict || booking.subdistrict === filterSubdistrict;
-                const matchesCompleted = !filterCompleted ||
-                                         (filterCompleted === "Yes" && booking.completed === true) ||
-                                         (filterCompleted === "No" && booking.completed === false);
-
-                return matchesName && matchesStaff && matchesSubdistrict && matchesCompleted;
-            });
-
-            renderBookingsTable(filteredBookings);
-        }
-
-        function renderBookingsTable(bookings) {
-            const bookingsTableContainer = document.getElementById('bookingsTableContainer');
-            if (bookings.length === 0) {
-                bookingsTableContainer.innerHTML = '<p>ไม่พบรายการงานที่ตรงกับเงื่อนไขการค้นหา</p>';
-                return;
-            }
-
-            let tableHTML = '<table><thead><tr>';
-            const headers = Object.keys(bookings[0]).filter(header => header.toLowerCase() !== 'timestamp');
-
-            headers.forEach(header => {
-                const displayHeader = header.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                tableHTML += `<th>${displayHeader}</th>`;
-            });
-            tableHTML += '<th>Actions</th>'; // Add Actions header
-            tableHTML += '</tr></thead><tbody>';
-
-            bookings.forEach(booking => {
-                tableHTML += `<tr data-timestamp="${booking.timestamp}">`; // Add data-timestamp attribute
-                headers.forEach(header => {
-                    const displayValue = (header === 'paid' || header === 'completed') ? (booking[header] ? 'Yes' : 'No') : booking[header];
-                    // Render cells with a span (display) and a hidden input/select (edit)
-                    tableHTML += `<td>
-                        <span class="display-mode">${displayValue}</span>
-                        <input type="${(header === 'amount') ? 'number' : (header === 'paid' ? 'checkbox' : 'text')}"
-                               class="edit-mode" style="display: none;"
-                               data-field="${header}" value="${booking[header] !== undefined ? booking[header] : ''}"
-                               ${header === 'amount' ? 'step="0.01"' : ''}
-                               ${header === 'paid' && booking.paid ? 'checked' : ''}
-                        >
-                        ${header === 'completed' || header === 'staff' || header === 'subdistrict' ? `
-                            <select class="edit-mode" style="display: none;" data-field="${header}">
-                                <option value="">${header === 'completed' ? 'เลือกสถานะ' : (header === 'staff' ? 'เลือกพนักงาน' : 'เลือกตำบล')}</option>
-                                ${header === 'completed' ? `
-                                    <option value="true" ${booking.completed === true ? 'selected' : ''}>Yes</option>
-                                    <option value="false" ${booking.completed === false ? 'selected' : ''}>No</option>
-                                ` : (header === 'staff' ? `
-                                    ${STAFF_OPTIONS.map(opt => `<option value="${opt}" ${booking.staff === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                                ` : (header === 'subdistrict' ? `
-                                    ${SUBDISTRICT_OPTIONS.map(opt => `<option value="${opt}" ${booking.subdistrict === opt ? 'selected' : ''}>${opt}</option>`).join('')}
-                                ` : ''))}
-                            </select>
-                        ` : ''}
-                    </td>`;
-                });
-                // Action buttons
-                tableHTML += `<td>
-                    <div class="action-buttons">
-                        <button class="edit-btn" onclick="enterEditMode(this, '${booking.timestamp}')">แก้ไข</button>
-                        <button class="save-btn" style="display: none;" onclick="saveBooking(this, '${booking.timestamp}')">บันทึก</button>
-                        <button class="cancel-btn" style="display: none;" onclick="cancelEdit(this, '${booking.timestamp}')">ยกเลิก</button>
-                        <button class="delete-btn" onclick="showConfirmModal('${booking.timestamp}', '${booking.name}')">ลบ</button>
-                    </div>
-                </td>`;
-                tableHTML += '</tr>';
-            });
-            tableHTML += '</tbody></table>';
-            bookingsTableContainer.innerHTML = tableHTML;
-        }
-
-        // Stores original values when entering edit mode for cancellation
-        const originalRowValues = {};
-
-        function enterEditMode(buttonElement, timestamp) {
-            const row = buttonElement.closest('tr');
-            if (!row) return;
-
-            editingRowTimestamp = timestamp;
-
-            // Store original values before editing
-            const booking = allBookingsData.find(b => b.timestamp === timestamp);
-            originalRowValues[timestamp] = { ...booking };
-
-            row.querySelectorAll('.display-mode').forEach(span => span.style.display = 'none');
-            row.querySelectorAll('.edit-mode').forEach(input => {
-                input.style.display = 'inline-block'; // Or 'block' depending on element type
-                if (input.type === 'checkbox') {
-                    input.style.display = 'inline'; // Checkbox is inline
-                }
-            });
-
-            // Show save/cancel, hide edit
-            buttonElement.style.display = 'none';
-            row.querySelector('.save-btn').style.display = 'inline-block';
-            row.querySelector('.cancel-btn').style.display = 'inline-block';
-            row.querySelector('.delete-btn').style.display = 'none'; // Hide delete button during edit
-        }
-
-        function saveBooking(buttonElement, timestamp) {
-            const row = buttonElement.closest('tr');
-            if (!row) return;
-
-            const updatedData = {
-                timestamp: timestamp
-            };
-            // Collect data from visible input/select elements
-            row.querySelectorAll('.edit-mode').forEach(element => {
-                const field = element.dataset.field;
-                if (field) {
-                    if (element.type === 'checkbox') {
-                        updatedData[field] = element.checked;
-                    } else if (element.tagName === 'SELECT') {
-                        updatedData[field] = element.value;
-                    } else {
-                        updatedData[field] = element.value;
-                    }
-                }
-            });
-
-            displayMessage('กำลังบันทึกข้อมูล...', 'info', 'viewMessage'); // Show loading message
-
-            const url = `${WEB_APP_URL}?action=updateBooking&data=${encodeURIComponent(JSON.stringify(updatedData))}&callback=handleUpdateBookingResponse`;
-            fetch(url)
-                .then(response => response.text())
-                .then(text => {
-                    eval(text);
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    displayMessage('เกิดข้อผิดพลาดในการบันทึก: ' + error.message, 'error', 'viewMessage');
-                    exitEditMode(row, timestamp); // Exit edit mode on error
-                });
-        }
-
-        function handleUpdateBookingResponse(response) {
-            const viewMessageDiv = document.getElementById('viewMessage');
-            if (response.success) {
-                displayMessage('บันทึกข้อมูลสำเร็จ!', 'success', 'viewMessage');
-                // Re-fetch and render all data to reflect changes and exit edit mode for all
-                fetchAndRenderAllBookings();
-                editingRowTimestamp = null; // Clear editing state
-            } else {
-                displayMessage('บันทึกข้อมูลไม่สำเร็จ: ' + response.error, 'error', 'viewMessage');
-                // Keep the row in edit mode on error to allow user to retry or cancel
-            }
-        }
-
-        function cancelEdit(buttonElement, timestamp) {
-            const row = buttonElement.closest('tr');
-            if (!row) return;
-
-            // Revert values using stored original data
-            const originalData = originalRowValues[timestamp];
-            if (originalData) {
-                row.querySelectorAll('.edit-mode').forEach(element => {
-                    const field = element.dataset.field;
-                    if (originalData[field] !== undefined) {
-                        if (element.type === 'checkbox') {
-                            element.checked = originalData[field];
-                        } else {
-                            element.value = originalData[field];
-                        }
-                    }
-                });
-            }
-            exitEditMode(row, timestamp); // Exit edit mode
-        }
-
-        function exitEditMode(row, timestamp) {
-            row.querySelectorAll('.display-mode').forEach(span => span.style.display = 'inline-block');
-            row.querySelectorAll('.edit-mode').forEach(input => input.style.display = 'none');
-
-            // Show edit, hide save/cancel
-            row.querySelector('.edit-btn').style.display = 'inline-block';
-            row.querySelector('.save-btn').style.display = 'none';
-            row.querySelector('.cancel-btn').style.display = 'none';
-            row.querySelector('.delete-btn').style.display = 'inline-block'; // Show delete button again
-
-            delete originalRowValues[timestamp]; // Clean up stored original values
-            editingRowTimestamp = null; // Clear editing state
-        }
-
-        // --- Delete Booking Logic (with custom modal) ---
-        let deleteConfirmTimestamp = null;
-
-        function showConfirmModal(timestamp, name) {
-            deleteConfirmTimestamp = timestamp;
-            const modal = document.getElementById('confirmModal');
-            document.getElementById('modalTitle').textContent = 'ยืนยันการลบรายการ?';
-            document.getElementById('modalBody').innerHTML = `คุณต้องการลบรายการของ <strong>${name}</strong> ใช่หรือไม่? <br>การกระทำนี้ไม่สามารถย้อนกลับได้`;
-            modal.style.display = 'flex'; // Show modal
-        }
-
-        function hideConfirmModal() {
-            const modal = document.getElementById('confirmModal');
-            modal.style.display = 'none';
-            deleteConfirmTimestamp = null; // Clear timestamp
-        }
-
-        document.getElementById('confirmYesBtn').addEventListener('click', function() {
-            if (deleteConfirmTimestamp) {
-                deleteBooking(deleteConfirmTimestamp);
-            }
-            hideConfirmModal();
-        });
-
-        document.getElementById('confirmNoBtn').addEventListener('click', function() {
-            hideConfirmModal();
-        });
-
-        // Close modal if clicked outside content (optional)
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('confirmModal');
-            if (event.target === modal) {
-                hideConfirmModal();
-            }
-        });
-
-
-        function deleteBooking(timestamp) {
-            displayMessage('กำลังลบข้อมูล...', 'info', 'viewMessage'); // Show loading message
-
-            const url = `${WEB_APP_URL}?action=deleteByTimestamp&timestamp=${encodeURIComponent(timestamp)}&callback=handleDeleteBookingResponse`;
-            fetch(url)
-                .then(response => response.text())
-                .then(text => {
-                    eval(text);
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    displayMessage('เกิดข้อผิดพลาดในการลบ: ' + error.message, 'error', 'viewMessage');
-                });
-        }
-
-        function handleDeleteBookingResponse(response) {
-            const viewMessageDiv = document.getElementById('viewMessage');
-            if (response.success) {
-                displayMessage('ลบข้อมูลสำเร็จ!', 'success', 'viewMessage');
-                // Re-fetch and render all data to reflect changes
-                fetchAndRenderAllBookings();
-            } else {
-                displayMessage('ลบข้อมูลไม่สำเร็จ: ' + response.error, 'error', 'viewMessage');
-            }
-        }
-
-
-        // --- Statistics Tab Functions ---
-        // Global chart instances to be managed
-        // CHANGED: Declared with 'var' instead of 'let' to avoid redeclaration errors
-        var staffPerformanceChart = null;
-        var monthlyServicesChart = null;
-        var paidFreeChart = null;
-        var monthlyRevenueChart = null;
-        var subdistrictVolumeChart = null;
-
-        function renderStatistics(bookings) {
-            let totalBookings = bookings.length;
-            let completedBookings = bookings.filter(b => b.completed === true).length;
-            let incompleteBookings = totalBookings - completedBookings;
-            let totalAmount = bookings.reduce((sum, b) => sum + (parseFloat(b.amount) || 0), 0);
-
-            // Calculate bookings per staff with incomplete count
-            const staffStats = {};
-            bookings.forEach(b => {
-                if (b.staff) {
-                    if (!staffStats[b.staff]) {
-                        staffStats[b.staff] = { total: 0, incomplete: 0 };
-                    }
-                    staffStats[b.staff].total++;
-                    if (!b.completed) { // If not completed, increment incomplete count
-                        staffStats[b.staff].incomplete++;
-                    }
-                }
-            });
-
-            // Update HTML elements with calculated statistics
-            document.getElementById('totalBookings').textContent = totalBookings;
-            document.getElementById('completedBookings').textContent = completedBookings;
-            document.getElementById('incompleteBookings').textContent = incompleteBookings;
-            document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
-
-            // Render staff statistics as a list
-            const staffStatsList = document.getElementById('staffStatsList');
-            staffStatsList.innerHTML = '';
-            if (Object.keys(staffStats).length > 0) {
-                const sortedStaff = Object.keys(staffStats).sort();
-                sortedStaff.forEach(staff => {
-                    const li = document.createElement('li');
-                    li.textContent = `${staff}: ${staffStats[staff].total} งาน (ยังไม่เสร็จ: ${staffStats[staff].incomplete} งาน)`;
-                    staffStatsList.appendChild(li);
-                });
-            } else {
-                staffStatsList.innerHTML = '<li>ไม่มีข้อมูลพนักงาน</li>';
-            }
-
-
-            // --- Data for new Charts ---
-            const last12Months = getLast12MonthsFormatted();
-            const monthlyServicesData = {}; // { 'YYYY-MM': count }
-            const monthlyRevenueData = {};  // { 'YYYY-MM': sumOfAmount }
-            let paidCount = 0;
-            let freeCount = 0;
-            const subdistrictVolumeData = {}; // { subdistrictName: totalVolume }
-
-            // Initialize monthly data for the last 12 months
-            last12Months.forEach(m => {
-                monthlyServicesData[m] = 0;
-                monthlyRevenueData[m] = 0;
-            });
-            // Initialize subdistrict data for all known subdistricts
-            SUBDISTRICT_OPTIONS.forEach(sub => {
-                subdistrictVolumeData[sub] = 0;
-            });
-
-
-            bookings.forEach(b => {
-                // For monthly services and revenue
-                const date = new Date(b.timestamp);
-                const yearMonth = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-                if (last12Months.includes(yearMonth)) {
-                    monthlyServicesData[yearMonth]++;
-                    if (b.paid) { // Only count paid services for revenue
-                        monthlyRevenueData[yearMonth] += (parseFloat(b.amount) || 0);
-                    }
-                }
-
-                // For paid vs free
-                if (b.paid) {
-                    paidCount++;
-                } else {
-                    freeCount++;
-                }
-
-                // For subdistrict volume
-                if (b.subdistrict && b.amount !== undefined) {
-                    const volume = (parseFloat(b.amount) || 0) / 250; // Convert amount to volume
-                    subdistrictVolumeData[b.subdistrict] = (subdistrictVolumeData[b.subdistrict] || 0) + volume;
-                }
-            });
-
-            // --- Chart Rendering ---
-
-            // 1. Staff Performance Chart
-            const staffLabels = Object.keys(staffStats).sort();
-            const staffTotalJobData = staffLabels.map(staff => staffStats[staff].total);
-            const staffIncompleteJobData = staffLabels.map(staff => staffStats[staff].incomplete);
-
-            const staffPerformanceCtx = document.getElementById('staffPerformanceChart').getContext('2d');
-            if (staffPerformanceChart) staffPerformanceChart.destroy();
-            staffPerformanceChart = new Chart(staffPerformanceCtx, {
-                type: 'bar',
-                data: {
-                    labels: staffLabels,
-                    datasets: [
-                        {
-                            label: 'งานทั้งหมด',
-                            data: staffTotalJobData,
-                            backgroundColor: '#FF66B2', // Pink
-                            borderColor: '#E6007A',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'งานที่ยังไม่เสร็จ',
-                            data: staffIncompleteJobData,
-                            backgroundColor: '#F44336', // Red
-                            borderColor: '#da190b',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'จำนวนงาน'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'พนักงาน'
-                            }
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'จำนวนงานรวมและงานที่ยังไม่เสร็จต่อพนักงาน',
-                            font: { size: 16, weight: 'bold' },
-                            color: '#E6007A'
-                        }
-                    }
-                }
-            });
-
-
-            // 2. Monthly Services Chart (last 12 months)
-            const monthlyLabels = last12Months.map(ym => formatMonthYearToThai(ym));
-            const monthlyServiceCounts = last12Months.map(ym => monthlyServicesData[ym]);
-
-            const monthlyServicesCtx = document.getElementById('monthlyServicesChart').getContext('2d');
-            if (monthlyServicesChart) monthlyServicesChart.destroy();
-            monthlyServicesChart = new Chart(monthlyServicesCtx, {
-                type: 'bar',
-                data: {
-                    labels: monthlyLabels,
-                    datasets: [{
-                        label: 'จำนวนการให้บริการ',
-                        data: monthlyServiceCounts,
-                        backgroundColor: '#FF99C8', // Lighter Pink
-                        borderColor: '#E6007A',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'จำนวนงาน'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'เดือน'
-                            }
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'จำนวนการให้บริการ 12 เดือนล่าสุด',
-                            font: { size: 16, weight: 'bold' },
-                            color: '#E6007A'
-                        },
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-
-
-            // 3. Paid vs Free Services Chart (Pie Chart)
-            const paidFreeLabels = ['บริการเก็บเงิน', 'บริการฟรี'];
-            const paidFreeCounts = [paidCount, freeCount];
-            const paidFreeColors = ['#4CAF50', '#F44336']; // Green for paid, Red for free
-
-            const paidFreeCtx = document.getElementById('paidFreeChart').getContext('2d');
-            if (paidFreeChart) paidFreeChart.destroy();
-            paidFreeChart = new Chart(paidFreeCtx, {
-                type: 'pie',
-                data: {
-                    labels: paidFreeLabels,
-                    datasets: [{
-                        data: paidFreeCounts,
-                        backgroundColor: paidFreeColors,
-                        borderColor: '#FFFFFF',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'สัดส่วนระหว่างบริการเก็บเงิน/ฟรี',
-                            font: { size: 16, weight: 'bold' },
-                            color: '#E6007A'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.parsed || 0;
-                                    const total = context.dataset.data.reduce((acc, current) => acc + current, 0);
-                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(2) : 0;
-                                    return `${label}: ${value} งาน (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-
-            // 4. Monthly Revenue Chart (last 12 months)
-            const monthlyRevenueLabels = last12Months.map(ym => formatMonthYearToThai(ym));
-            const monthlyRevenueAmounts = last12Months.map(ym => monthlyRevenueData[ym]);
-
-            const monthlyRevenueCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
-            if (monthlyRevenueChart) monthlyRevenueChart.destroy();
-            monthlyRevenueChart = new Chart(monthlyRevenueCtx, {
-                type: 'bar', // Can be 'line' for trend
-                data: {
-                    labels: monthlyRevenueLabels,
-                    datasets: [{
-                        label: 'รายได้ (บาท)',
-                        data: monthlyRevenueAmounts,
-                        backgroundColor: '#FFB3C8', // Another pink shade
-                        borderColor: '#E6007A',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'รายได้ (บาท)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'เดือน'
-                            }
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'รายได้ต่อเดือน 12 เดือนล่าสุด',
-                            font: { size: 16, weight: 'bold' },
-                            color: '#E6007A'
-                        },
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-
-
-            // 5. Subdistrict Volume Chart
-            const subdistrictVolumeLabels = Object.keys(subdistrictVolumeData).sort((a,b) => {
-                // Sort by predefined order for consistency
-                return SUBDISTRICT_OPTIONS.indexOf(a) - SUBDISTRICT_OPTIONS.indexOf(b);
-            });
-            const subdistrictVolumeValues = subdistrictVolumeLabels.map(sub => subdistrictVolumeData[sub]);
-
-            const subdistrictVolumeCtx = document.getElementById('subdistrictVolumeChart').getContext('2d');
-            if (subdistrictVolumeChart) subdistrictVolumeChart.destroy();
-            subdistrictVolumeChart = new Chart(subdistrictVolumeCtx, {
-                type: 'bar',
-                data: {
-                    labels: subdistrictVolumeLabels,
-                    datasets: [{
-                        label: 'ปริมาณ (ลบ.ม.)',
-                        data: subdistrictVolumeValues,
-                        backgroundColor: [ // Various pink/red shades for visual distinction
-                            '#FF99C8', '#FFB3C8', '#FFCDD2', '#FFDDE3', '#FFE7EA', '#FFF0F5', '#F8E0E0'
-                        ],
-                        borderColor: '#E6007A',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'ปริมาณ (ลูกบาศก์เมตร)'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'ตำบล'
-                            }
-                        }
-                    },
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'ปริมาณสิ่งปฏิกูลแต่ละตำบล (ลบ.ม.)',
-                            font: { size: 16, weight: 'bold' },
-                            color: '#E6007A'
-                        },
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-
-
-            // If no data, show message and destroy charts
-            if (totalBookings === 0) {
-                document.getElementById('statsContent').innerHTML = '<p>ไม่พบข้อมูลสำหรับแสดงสถิติ</p>';
-                if (staffPerformanceChart) staffPerformanceChart.destroy();
-                if (monthlyServicesChart) monthlyServicesChart.destroy();
-                if (paidFreeChart) paidFreeChart.destroy();
-                if (monthlyRevenueChart) monthlyRevenueChart.destroy();
-                if (subdistrictVolumeChart) subdistrictVolumeChart.destroy();
-            }
-        }
-
-        // --- Initial Load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            showTab('addBookingTab', null);
-        });
-    </script>
+      })
+      .catch(function(err){ displayMessage('เกิดข้อผิดพลาดในการลบ: ' + err.message,'error','viewMessage'); });
+  });
+  document.getElementById('confirmNoBtn').addEventListener('click', hideConfirmModal);
+  window.addEventListener('click', function(e){ if(e.target === document.getElementById('confirmModal')){ hideConfirmModal(); } });
+
+  // =================== STATS ===================
+  function destroyAllChartsAndResetCanvases(){
+    [staffPerformanceChart, monthlyServicesChart, paidFreeChart, monthlyRevenueChart, subdistrictVolumeChart].forEach(function(c){ if(c){ c.destroy(); } });
+    staffPerformanceChart = monthlyServicesChart = paidFreeChart = monthlyRevenueChart = subdistrictVolumeChart = null;
+    ['staffPerformanceChart','monthlyServicesChart','paidFreeChart','monthlyRevenueChart','subdistrictVolumeChart'].forEach(function(id){
+      const old = document.getElementById(id);
+      const parent = old.parentNode;
+      old.remove();
+      const c = document.createElement('canvas');
+      c.id = id;
+      parent.appendChild(c);
+    });
+  }
+
+  function renderStatistics(bookings){
+    const total = bookings.length;
+    const completed = bookings.filter(function(b){ return b.completed === true; }).length;
+    const incomplete = total - completed;
+    const totalAmount = bookings.reduce(function(s,b){ return s + (parseFloat(b.amount) || 0); }, 0);
+    document.getElementById('totalBookings').textContent = nf.format(total);
+    document.getElementById('completedBookings').textContent = nf.format(completed);
+    document.getElementById('incompleteBookings').textContent = nf.format(incomplete);
+    document.getElementById('totalAmount').textContent = nfc.format(totalAmount);
+
+    const staffStats = Object.create(null);
+    bookings.forEach(function(b){
+      if(!b.staff){ return; }
+      if(!staffStats[b.staff]){ staffStats[b.staff] = { total: 0, incomplete: 0 }; }
+      staffStats[b.staff].total++;
+      if(!b.completed){ staffStats[b.staff].incomplete++; }
+    });
+    const staffList = document.getElementById('staffStatsList');
+    staffList.innerHTML = '';
+    if(Object.keys(staffStats).length){
+      Object.keys(staffStats).sort().forEach(function(s){
+        const li = document.createElement('li');
+        li.textContent = s + ': ' + staffStats[s].total + ' งาน (ยังไม่เสร็จ: ' + staffStats[s].incomplete + ' งาน)';
+        staffList.appendChild(li);
+      });
+    } else {
+      staffList.innerHTML = '<li>ไม่มีข้อมูลพนักงาน</li>';
+    }
+
+    const last12 = getLast12MonthsFormatted();
+    const monthlyServices = Object.fromEntries(last12.map(function(m){ return [m,0]; }));
+    const monthlyRevenue = Object.fromEntries(last12.map(function(m){ return [m,0]; }));
+    let paidCount = 0, freeCount = 0;
+    const subVolume = Object.fromEntries(SUBDISTRICT_OPTIONS.map(function(s){ return [s,0]; }));
+
+    bookings.forEach(function(b){
+      const d = new Date(b.timestamp);
+      const ym = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      if(last12.indexOf(ym) !== -1){
+        monthlyServices[ym]++;
+        if(b.paid){ monthlyRevenue[ym] += (parseFloat(b.amount) || 0); }
+      }
+      if(b.paid){ paidCount++; } else { freeCount++; }
+      if(b.subdistrict){ subVolume[b.subdistrict] = (subVolume[b.subdistrict] || 0) + ((parseFloat(b.amount) || 0) / RATE_PER_CUBIC_METER); }
+    });
+
+    const staffLabels = Object.keys(staffStats).sort();
+    const staffTotals = staffLabels.map(function(k){ return staffStats[k].total; });
+    const staffIncomplete = staffLabels.map(function(k){ return staffStats[k].incomplete; });
+
+    const ctx1 = document.getElementById('staffPerformanceChart').getContext('2d');
+    staffPerformanceChart = new Chart(ctx1, { type: 'bar', data: { labels: staffLabels, datasets: [ { label: 'งานทั้งหมด', data: staffTotals, backgroundColor: '#FF66B2', borderColor: '#E6007A', borderWidth: 1 }, { label: 'งานที่ยังไม่เสร็จ', data: staffIncomplete, backgroundColor: '#F44336', borderColor: '#da190b', borderWidth: 1 } ]}, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'จำนวนงาน' } }, x:{ title:{ display:true, text:'พนักงาน' } } }, plugins:{ title:{ display:true, text:'จำนวนงานรวมและงานที่ยังไม่เสร็จต่อพนักงาน', font:{ size:16, weight:'bold' }, color:'#E6007A' } } } });
+
+    const monthlyLabels = last12.map(formatMonthYearToThai);
+    const monthlyServiceCounts = last12.map(function(m){ return monthlyServices[m]; });
+    const ctx2 = document.getElementById('monthlyServicesChart').getContext('2d');
+    monthlyServicesChart = new Chart(ctx2, { type: 'bar', data: { labels: monthlyLabels, datasets: [{ label: 'จำนวนการให้บริการ', data: monthlyServiceCounts, backgroundColor: '#FF99C8', borderColor: '#E6007A', borderWidth: 1 }] }, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'จำนวนงาน' } }, x:{ title:{ display:true, text:'เดือน' } } }, plugins:{ title:{ display:true, text:'จำนวนการให้บริการ 12 เดือนล่าสุด', font:{ size:16, weight:'bold' }, color:'#E6007A' }, legend:{ display:false } } } });
+
+    const ctx3 = document.getElementById('paidFreeChart').getContext('2d');
+    paidFreeChart = new Chart(ctx3, { type: 'pie', data: { labels: ['บริการเก็บเงิน','บริการฟรี'], datasets: [{ data: [paidCount, freeCount], backgroundColor: ['#4CAF50','#F44336'], borderColor: '#fff', borderWidth: 2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{ title:{ display:true, text:'สัดส่วนระหว่างบริการเก็บเงิน/ฟรี', font:{ size:16, weight:'bold' }, color:'#E6007A' }, tooltip:{ callbacks:{ label:function(ctx){ const v = ctx.parsed || 0; const t = ctx.dataset.data.reduce(function(a,c){return a+c;},0) || 1; return ctx.label + ': ' + v + ' งาน (' + (v*100/t).toFixed(2) + '%)'; } } } } } });
+
+    const monthlyRevenueLabels = last12.map(formatMonthYearToThai);
+    const monthlyRevenueAmounts = last12.map(function(m){ return monthlyRevenue[m]; });
+    const ctx4 = document.getElementById('monthlyRevenueChart').getContext('2d');
+    monthlyRevenueChart = new Chart(ctx4, { type: 'bar', data: { labels: monthlyRevenueLabels, datasets: [{ label: 'รายได้ (บาท)', data: monthlyRevenueAmounts, backgroundColor: '#FFB3C8', borderColor: '#E6007A', borderWidth: 1 }] }, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'รายได้ (บาท)' } }, x:{ title:{ display:true, text:'เดือน' } } }, plugins:{ title:{ display:true, text:'รายได้ต่อเดือน 12 เดือนล่าสุด', font:{ size:16, weight:'bold' }, color:'#E6007A' }, legend:{ display:false } } } });
+
+    const subdistrictVolumeLabels = Object.keys(subVolume).sort(function(a,b){ return SUBDISTRICT_OPTIONS.indexOf(a) - SUBDISTRICT_OPTIONS.indexOf(b); });
+    const subdistrictVolumeValues = subdistrictVolumeLabels.map(function(s){ return +subVolume[s].toFixed(2); });
+    const ctx5 = document.getElementById('subdistrictVolumeChart').getContext('2d');
+    subdistrictVolumeChart = new Chart(ctx5, { type: 'bar', data: { labels: subdistrictVolumeLabels, datasets: [{ label: 'ปริมาณ (ลบ.ม.)', data: subdistrictVolumeValues, backgroundColor: ['#FF99C8','#FFB3C8','#FFCDD2','#FFDDE3','#FFE7EA','#FFF0F5','#F8E0E0'], borderColor: '#E6007A', borderWidth: 1 }] }, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'ปริมาณ (ลูกบาศก์เมตร)' } }, x:{ title:{ display:true, text:'ตำบล' } } }, plugins:{ title:{ display:true, text:'ปริมาณสิ่งปฏิกูลแต่ละตำบล (ลบ.ม.)', font:{ size:16, weight:'bold' }, color:'#E6007A' }, legend:{ display:false } } } });
+
+    if(total === 0){ document.getElementById('statsContent').innerHTML = '<p>ไม่พบข้อมูลสำหรับแสดงสถิติ</p>'; destroyAllChartsAndResetCanvases(); }
+  }
+
+  // =================== INIT ===================
+  function restoreActiveTab(){
+    const id = getActiveTabFromStorage();
+    document.querySelectorAll('.tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tab') === id); });
+    document.querySelectorAll('.tab-content').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + id); });
+    if(id === 'search'){ fetchAndRenderAllBookings(false); }
+    if(id === 'stats'){ fetchAndRenderAllBookings(true); }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    populateSelectOptions();
+    restoreActiveTab();
+
+    // ===== Self-tests (safe) =====
+    try{
+      console.assert(typeof debounce(function(){},200) === 'function', 'debounce should return a function');
+      const testStr = "<>&\"'</>"; // <>&"'</>
+      console.assert(sanitize(testStr) === '&lt;&gt;&amp;&quot;&#39;&lt;/>', 'sanitize mapping should match');
+      const m = getLast12MonthsFormatted();
+      console.assert(Array.isArray(m) && m.length === 12, 'getLast12MonthsFormatted length');
+    }catch(_e){ console.warn('Self-test warnings:', _e); }
+  });
+  </script>
 </body>
 </html>
