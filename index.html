@@ -623,101 +623,151 @@
     });
   }
 
-function renderStatistics(bookings) {
-    if (!bookings || bookings.length === 0) {
-      document.getElementById('statsContent').innerHTML = '<p style="text-align:center; padding:20px;">ไม่พบข้อมูลสำหรับแสดงสถิติ</p>';
-      destroyAllChartsAndResetCanvases();
-      return;
-    }
+  function renderStatistics(bookings){
 
     const total = bookings.length;
-    // ปรับปรุง: เช็กสถานะงาน (รองรับทั้ง Boolean และ Text "Yes")
-    const completed = bookings.filter(function(b) {
-      return b.completed === true || String(b.completed).toLowerCase() === 'yes';
-    }).length;
+
+    const completed = bookings.filter(function(b){ return b.completed === true; }).length;
 
     const incomplete = total - completed;
-    const totalAmount = bookings.reduce(function(s, b) { return s + (parseFloat(b.amount) || 0); }, 0);
+
+    const totalAmount = bookings.reduce(function(s,b){ return s + (parseFloat(b.amount) || 0); }, 0);
 
     document.getElementById('totalBookings').textContent = nf.format(total);
+
     document.getElementById('completedBookings').textContent = nf.format(completed);
+
     document.getElementById('incompleteBookings').textContent = nf.format(incomplete);
+
     document.getElementById('totalAmount').textContent = nfc.format(totalAmount);
 
-    // ประมวลผลสถิติพนักงาน
+
+
     const staffStats = Object.create(null);
-    bookings.forEach(function(b) {
-      if (!b.staff) return;
-      if (!staffStats[b.staff]) { staffStats[b.staff] = { total: 0, incomplete: 0 }; }
+
+    bookings.forEach(function(b){
+
+      if(!b.staff){ return; }
+
+      if(!staffStats[b.staff]){ staffStats[b.staff] = { total: 0, incomplete: 0 }; }
+
       staffStats[b.staff].total++;
-      
-      const isDone = (b.completed === true || String(b.completed).toLowerCase() === 'yes');
-      if (!isDone) { staffStats[b.staff].incomplete++; }
+
+      if(!b.completed){ staffStats[b.staff].incomplete++; }
+
     });
 
-    // แสดงรายการพนักงาน
     const staffList = document.getElementById('staffStatsList');
+
     staffList.innerHTML = '';
-    if (Object.keys(staffStats).length) {
-      Object.keys(staffStats).sort().forEach(function(s) {
+
+    if(Object.keys(staffStats).length){
+
+      Object.keys(staffStats).sort().forEach(function(s){
+
         const li = document.createElement('li');
+
         li.textContent = s + ': ' + staffStats[s].total + ' งาน (ยังไม่เสร็จ: ' + staffStats[s].incomplete + ' งาน)';
+
         staffList.appendChild(li);
+
       });
+
     } else {
+
       staffList.innerHTML = '<li>ไม่มีข้อมูลพนักงาน</li>';
+
     }
 
-    // เตรียมข้อมูลกราฟ
+
+
     const last12 = getLast12MonthsFormatted();
-    const monthlyServices = Object.fromEntries(last12.map(function(m) { return [m, 0]; }));
-    const monthlyRevenue = Object.fromEntries(last12.map(function(m) { return [m, 0]; }));
+
+    const monthlyServices = Object.fromEntries(last12.map(function(m){ return [m,0]; }));
+
+    const monthlyRevenue = Object.fromEntries(last12.map(function(m){ return [m,0]; }));
+
     let paidCount = 0, freeCount = 0;
-    const subVolume = Object.fromEntries(SUBDISTRICT_OPTIONS.map(function(s) { return [s, 0]; }));
 
-    bookings.forEach(function(b) {
+    const subVolume = Object.fromEntries(SUBDISTRICT_OPTIONS.map(function(s){ return [s,0]; }));
+
+
+
+    bookings.forEach(function(b){
+
       const d = new Date(b.timestamp);
-      if (isNaN(d.getTime())) return;
-      
-      const ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-      const isPaid = (b.paid === true || String(b.paid).toLowerCase() === 'yes');
 
-      if (monthlyServices.hasOwnProperty(ym)) {
+      const ym = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+
+      if(last12.indexOf(ym) !== -1){
+
         monthlyServices[ym]++;
-        if (isPaid) { monthlyRevenue[ym] += (parseFloat(b.amount) || 0); }
+
+        if(b.paid){ monthlyRevenue[ym] += (parseFloat(b.amount) || 0); }
+
       }
 
-      if (isPaid) { paidCount++; } else { freeCount++; }
+      if(b.paid){ paidCount++; } else { freeCount++; }
 
-      if (b.subdistrict && SUBDISTRICT_OPTIONS.includes(b.subdistrict)) {
-        const vol = (parseFloat(b.amount) || 0) / RATE_PER_CUBIC_METER;
-        subVolume[b.subdistrict] += vol;
-      }
+      if(b.subdistrict){ subVolume[b.subdistrict] = (subVolume[b.subdistrict] || 0) + ((parseFloat(b.amount) || 0) / RATE_PER_CUBIC_METER); }
+
     });
 
-    // --- ส่วนการวาดกราฟ (ใช้ข้อมูลที่คำนวณใหม่ด้านบน) ---
+
+
     const staffLabels = Object.keys(staffStats).sort();
-    const staffTotals = staffLabels.map(function(k) { return staffStats[k].total; });
-    const staffIncomplete = staffLabels.map(function(k) { return staffStats[k].incomplete; });
+
+    const staffTotals = staffLabels.map(function(k){ return staffStats[k].total; });
+
+    const staffIncomplete = staffLabels.map(function(k){ return staffStats[k].incomplete; });
+
+
 
     const ctx1 = document.getElementById('staffPerformanceChart').getContext('2d');
-    staffPerformanceChart = new Chart(ctx1, { type: 'bar', data: { labels: staffLabels, datasets: [{ label: 'งานทั้งหมด', data: staffTotals, backgroundColor: '#FF66B2' }, { label: 'งานที่ยังไม่เสร็จ', data: staffIncomplete, backgroundColor: '#F44336' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'งานรวมและงานค้างต่อพนักงาน', color: '#E6007A' } } } });
+
+    staffPerformanceChart = new Chart(ctx1, { type: 'bar', data: { labels: staffLabels, datasets: [ { label: 'งานทั้งหมด', data: staffTotals, backgroundColor: '#FF66B2', borderColor: '#E6007A', borderWidth: 1 }, { label: 'งานที่ยังไม่เสร็จ', data: staffIncomplete, backgroundColor: '#F44336', borderColor: '#da190b', borderWidth: 1 } ]}, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'จำนวนงาน' } }, x:{ title:{ display:true, text:'พนักงาน' } } }, plugins:{ title:{ display:true, text:'จำนวนงานรวมและงานที่ยังไม่เสร็จต่อพนักงาน', font:{ size:16, weight:'bold' }, color:'#E6007A' } } } });
+
+
 
     const monthlyLabels = last12.map(formatMonthYearToThai);
+
+    const monthlyServiceCounts = last12.map(function(m){ return monthlyServices[m]; });
+
     const ctx2 = document.getElementById('monthlyServicesChart').getContext('2d');
-    monthlyServicesChart = new Chart(ctx2, { type: 'bar', data: { labels: monthlyLabels, datasets: [{ label: 'จำนวนงาน', data: last12.map(m => monthlyServices[m]), backgroundColor: '#FF99C8' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'การให้บริการ 12 เดือนล่าสุด', color: '#E6007A' } } } });
+
+    monthlyServicesChart = new Chart(ctx2, { type: 'bar', data: { labels: monthlyLabels, datasets: [{ label: 'จำนวนการให้บริการ', data: monthlyServiceCounts, backgroundColor: '#FF99C8', borderColor: '#E6007A', borderWidth: 1 }] }, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'จำนวนงาน' } }, x:{ title:{ display:true, text:'เดือน' } } }, plugins:{ title:{ display:true, text:'จำนวนการให้บริการ 12 เดือนล่าสุด', font:{ size:16, weight:'bold' }, color:'#E6007A' }, legend:{ display:false } } } });
+
+
 
     const ctx3 = document.getElementById('paidFreeChart').getContext('2d');
-    paidFreeChart = new Chart(ctx3, { type: 'pie', data: { labels: ['เก็บเงิน', 'ฟรี'], datasets: [{ data: [paidCount, freeCount], backgroundColor: ['#4CAF50', '#F44336'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'สัดส่วน บริการเก็บเงิน/ฟรี', color: '#E6007A' } } } });
+
+    paidFreeChart = new Chart(ctx3, { type: 'pie', data: { labels: ['บริการเก็บเงิน','บริการฟรี'], datasets: [{ data: [paidCount, freeCount], backgroundColor: ['#4CAF50','#F44336'], borderColor: '#fff', borderWidth: 2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{ title:{ display:true, text:'สัดส่วนระหว่างบริการเก็บเงิน/ฟรี', font:{ size:16, weight:'bold' }, color:'#E6007A' }, tooltip:{ callbacks:{ label:function(ctx){ const v = ctx.parsed || 0; const t = ctx.dataset.data.reduce(function(a,c){return a+c;},0) || 1; return ctx.label + ': ' + v + ' งาน (' + (v*100/t).toFixed(2) + '%)'; } } } } } });
+
+
+
+    const monthlyRevenueLabels = last12.map(formatMonthYearToThai);
+
+    const monthlyRevenueAmounts = last12.map(function(m){ return monthlyRevenue[m]; });
 
     const ctx4 = document.getElementById('monthlyRevenueChart').getContext('2d');
-    monthlyRevenueChart = new Chart(ctx4, { type: 'bar', data: { labels: monthlyLabels, datasets: [{ label: 'รายได้ (บาท)', data: last12.map(m => monthlyRevenue[m]), backgroundColor: '#FFB3C8' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'รายได้ต่อเดือน 12 เดือนล่าสุด', color: '#E6007A' } } } });
 
-    const subdistrictLabels = Object.keys(subVolume);
+    monthlyRevenueChart = new Chart(ctx4, { type: 'bar', data: { labels: monthlyRevenueLabels, datasets: [{ label: 'รายได้ (บาท)', data: monthlyRevenueAmounts, backgroundColor: '#FFB3C8', borderColor: '#E6007A', borderWidth: 1 }] }, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'รายได้ (บาท)' } }, x:{ title:{ display:true, text:'เดือน' } } }, plugins:{ title:{ display:true, text:'รายได้ต่อเดือน 12 เดือนล่าสุด', font:{ size:16, weight:'bold' }, color:'#E6007A' }, legend:{ display:false } } } });
+
+
+
+    const subdistrictVolumeLabels = Object.keys(subVolume).sort(function(a,b){ return SUBDISTRICT_OPTIONS.indexOf(a) - SUBDISTRICT_OPTIONS.indexOf(b); });
+
+    const subdistrictVolumeValues = subdistrictVolumeLabels.map(function(s){ return +subVolume[s].toFixed(2); });
+
     const ctx5 = document.getElementById('subdistrictVolumeChart').getContext('2d');
-    subdistrictVolumeChart = new Chart(ctx5, { type: 'bar', data: { labels: subdistrictLabels, datasets: [{ label: 'ปริมาณ (ลบ.ม.)', data: subdistrictLabels.map(s => subVolume[s].toFixed(2)), backgroundColor: '#FFCDD2' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'ปริมาณสิ่งปฏิกูลรายตำบล', color: '#E6007A' } } } });
-  }
 
+    subdistrictVolumeChart = new Chart(ctx5, { type: 'bar', data: { labels: subdistrictVolumeLabels, datasets: [{ label: 'ปริมาณ (ลบ.ม.)', data: subdistrictVolumeValues, backgroundColor: ['#FF99C8','#FFB3C8','#FFCDD2','#FFDDE3','#FFE7EA','#FFF0F5','#F8E0E0'], borderColor: '#E6007A', borderWidth: 1 }] }, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'ปริมาณ (ลูกบาศก์เมตร)' } }, x:{ title:{ display:true, text:'ตำบล' } } }, plugins:{ title:{ display:true, text:'ปริมาณสิ่งปฏิกูลแต่ละตำบล (ลบ.ม.)', font:{ size:16, weight:'bold' }, color:'#E6007A' }, legend:{ display:false } } } });
+
+
+
+    if(total === 0){ document.getElementById('statsContent').innerHTML = '<p>ไม่พบข้อมูลสำหรับแสดงสถิติ</p>'; destroyAllChartsAndResetCanvases(); }
+
+  }
   // =================== INIT ===================
   function restoreActiveTab(){
     const id = getActiveTabFromStorage();
