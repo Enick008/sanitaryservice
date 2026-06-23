@@ -192,7 +192,7 @@
   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyahkXofdS557MnH_9nHJm7K_a5Lo7LNIp87_E4ly2wiJ9zg50tZjNkWIXha1ExVcUpA/exec';
   const STAFF_OPTIONS = ["ศุภชัย เปี่ยมประถม","ไพรวัลย์ คำชาลี","ชวลิต ใจแผ้ว","ชาคริต ปัญญา"];
   const SUBDISTRICT_OPTIONS = ["อ่างทอง","ลิปะน้อย","ตลิ่งงาม","หน้าเมือง","มะเร็ต","บ่อผุด","แม่น้ำ"];
-  const RATE_PER_CUBIC_METER = 250; // บาท/ลบ.ม.
+  const RATE_PER_CUBIC_METER = 250; 
 
   // =================== STATE ===================
   let allBookingsData = [];
@@ -202,7 +202,6 @@
   let currentPage = 1;
   const perPage = 20;
 
-  // Chart instances
   let staffPerformanceChart = null;
   let monthlyServicesChart = null;
   let paidFreeChart = null;
@@ -222,11 +221,15 @@
     }
     return months;
   }
+  
+  // เปลี่ยนการแสดงผลเดือนและปีเป็น ค.ศ.
   function formatMonthYearToThai(ym){
     const [y,m] = ym.split('-');
     const d = new Date(Number(y), Number(m)-1, 1);
-    return d.toLocaleString('th-TH', { month: 'long', year: 'numeric' });
+    const thMonth = d.toLocaleString('th-TH', { month: 'long' });
+    return thMonth + ' ' + y; // จะได้ผลลัพธ์เป็น "มิถุนายน 2026"
   }
+  
   function debounce(fn, ms=300){
     let t;
     return function debounced(){
@@ -660,36 +663,38 @@
     let paidCount = 0, freeCount = 0;
     const subVolume = Object.fromEntries(SUBDISTRICT_OPTIONS.map(function(s){ return [s,0]; }));
     
-    // --- จุดที่อัปเดตการดึงข้อมูลและแปลงวันที่เพื่อแก้กราฟไม่ขึ้น ---
+    // --- ระบบดึงวันที่ขั้นสุดยอด (Ultra-Fallback) และแปลง พ.ศ. เป็น ค.ศ. อัตโนมัติ ---
     bookings.forEach(function(b){
-      const rawDate = b.timestamp || b.Timestamp || b['วันที่'] || b['วันเวลา'] || b.date;
+      // ดึงข้อมูลวันที่จากทุกคอลัมน์ที่เป็นไปได้ หรือถ้าหาไม่เจอ ให้เอาคอลัมน์แรกสุดมาใช้ (ป้องกันบั๊กชื่อหัวตารางไม่ตรง)
+      let rawDate = b.timestamp || b.Timestamp || b['วันที่'] || b['วันเวลา'] || b.date || Object.values(b)[0];
 
       if (rawDate) {
         let d = new Date(rawDate);
-        let year = d.getFullYear();
+        let year;
         
-        // ถ้าวันที่อ่านไม่ออก (เช่น ใส่มาเป็น 23/06/2569) ให้พยายามแยกส่วนประกอบ
+        // ถ้า JavaScript อ่านวันที่ไม่ออก (เช่นเจอรูปแบบแปลกๆ อย่าง 23/06/2569) ให้แยกข้อความหาตัวเลข
         if (isNaN(d.getTime()) && typeof rawDate === 'string') {
-          const parts = rawDate.split(/[\/\-\sT]/);
+          let parts = rawDate.split(/[\/\-\sT]/).filter(function(x){ return x; });
           if (parts.length >= 3) {
             let p1 = parseInt(parts[0], 10);
             let p2 = parseInt(parts[1], 10);
             let p3 = parseInt(parts[2], 10);
             
-            if (parts[0].length === 4) { 
-              // รูปแบบ YYYY-MM-DD
-              year = p1; d = new Date(p1, p2 - 1, p3);
-            } else { 
-              // รูปแบบ DD/MM/YYYY
-              year = p3; d = new Date(p3, p2 - 1, p1);
+            // เดาว่าตัวไหนคือปี (ค่าที่เกิน 1000)
+            if (p1 > 1000) { 
+              d = new Date(p1, p2 - 1, p3);
+            } else if (p3 > 1000) { 
+              d = new Date(p3, p2 - 1, p1);
             }
           }
         }
 
-        // ถ้าได้วันที่สมบูรณ์แล้ว ให้จัดการแปลง พ.ศ. เป็น ค.ศ.
+        // เมื่อได้วันที่ที่ถูกต้องแล้ว
         if (d && !isNaN(d.getTime())) {
           year = d.getFullYear();
-          if (year > 2500) { year -= 543; } // ปรับ พ.ศ. ให้เป็น ค.ศ. อัตโนมัติ
+          
+          // ถ้าปีเกิน 2500 แสดงว่าเป็น พ.ศ. ให้ลบ 543 เพื่อทำเป็น ค.ศ. ทันที
+          if (year > 2500) { year -= 543; } 
           
           const ym = year + '-' + String(d.getMonth() + 1).padStart(2, '0');
           if (last12.indexOf(ym) !== -1) {
@@ -699,7 +704,6 @@
         }
       }
       
-      // คำนวณข้อมูลส่วนอื่นๆ ตามปกติ
       if(b.paid){ paidCount++; } else { freeCount++; }
       if(b.subdistrict){ subVolume[b.subdistrict] = (subVolume[b.subdistrict] || 0) + ((parseFloat(b.amount) || 0) / RATE_PER_CUBIC_METER); }
     });
@@ -714,7 +718,7 @@
     const monthlyLabels = last12.map(formatMonthYearToThai);
     const monthlyServiceCounts = last12.map(function(m){ return monthlyServices[m]; });
     const ctx2 = document.getElementById('monthlyServicesChart').getContext('2d');
-    monthlyServicesChart = new Chart(ctx2, { type: 'bar', data: { labels: monthlyLabels, datasets: [{ label: 'จำนวนการให้บริการ', data: monthlyServiceCounts, backgroundColor: '#FF99C8', borderColor: '#E6007A', borderWidth: 1 }] }, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'จำนวนงาน' } }, x:{ title:{ display:true, text:'เดือน' } } }, plugins:{ title:{ display:true, text:'จำนวนการให้บริการ 12 เดือนล่าสุด', font:{ size:16, weight:'bold' }, color:'#E6007A' }, legend:{ display:false } } } });
+    monthlyServicesChart = new Chart(ctx2, { type: 'bar', data: { labels: monthlyLabels, datasets: [{ label: 'จำนวนการให้บริการ', data: monthlyServiceCounts, backgroundColor: '#FF99C8', borderColor: '#E6007A', borderWidth: 1 }] }, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'จำนวนงาน' } }, x:{ title:{ display:true, text:'เดือน (ค.ศ.)' } } }, plugins:{ title:{ display:true, text:'จำนวนการให้บริการ 12 เดือนล่าสุด', font:{ size:16, weight:'bold' }, color:'#E6007A' }, legend:{ display:false } } } });
     
     const ctx3 = document.getElementById('paidFreeChart').getContext('2d');
     paidFreeChart = new Chart(ctx3, { type: 'pie', data: { labels: ['บริการเก็บเงิน','บริการฟรี'], datasets: [{ data: [paidCount, freeCount], backgroundColor: ['#4CAF50','#F44336'], borderColor: '#fff', borderWidth: 2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{ title:{ display:true, text:'สัดส่วนระหว่างบริการเก็บเงิน/ฟรี', font:{ size:16, weight:'bold' }, color:'#E6007A' }, tooltip:{ callbacks:{ label:function(ctx){ const v = ctx.parsed || 0; const t = ctx.dataset.data.reduce(function(a,c){return a+c;},0) || 1; return ctx.label + ': ' + v + ' งาน (' + (v*100/t).toFixed(2) + '%)'; } } } } } });
@@ -746,7 +750,7 @@
               callback: function(value) { return value.toLocaleString('th-TH'); }
             }
           }, 
-          x: { title: { display: true, text: 'เดือน' } } 
+          x: { title: { display: true, text: 'เดือน (ค.ศ.)' } } 
         }, 
         plugins: { 
           title: { 
