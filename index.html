@@ -65,7 +65,6 @@
       <button class="tab" data-tab="stats">สถิติ</button>
     </div>
 
-    <!-- Add Booking -->
     <section id="tab-add" class="tab-content active" aria-labelledby="tab-add">
       <form id="bookingForm" novalidate>
         <div class="grid">
@@ -115,7 +114,6 @@
       <div id="message" class="message"></div>
     </section>
 
-    <!-- Search & Report -->
     <section id="tab-search" class="tab-content" aria-labelledby="tab-search">
       <div class="toolbar">
         <div class="grid" style="width:100%">
@@ -154,7 +152,6 @@
       <div id="viewMessage" class="message"></div>
     </section>
 
-    <!-- Stats -->
     <section id="tab-stats" class="tab-content" aria-labelledby="tab-stats">
       <h3>สรุปสถิติ</h3>
       <div id="statsContent">
@@ -178,7 +175,6 @@
     <p>&copy;2025 ระบบให้บริการรถดูดสิ่งปฏิกูล กองช่างสุขาภิบาล โดย นายธีรศักดิ์ พูลเขาล้าน</p>
   </footer>
 
-  <!-- Confirm Modal -->
   <div id="confirmModal" class="modal" style="display:none">
     <div class="content">
       <h3 id="modalTitle">ยืนยันการลบ?</h3>
@@ -193,6 +189,7 @@
   <script>
   'use strict';
   // =================== CONFIG ===================
+  // ⚠️ อย่าลืมนำ URL จากการ Deploy GS (New Deployment) อันใหม่มาใส่ตรงนี้นะคะ
   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyahkXofdS557MnH_9nHJm7K_a5Lo7LNIp87_E4ly2wiJ9zg50tZjNkWIXha1ExVcUpA/exec';
   const STAFF_OPTIONS = ["ศุภชัย เปี่ยมประถม","ไพรวัลย์ คำชาลี","ชวลิต ใจแผ้ว","ชาคริต ปัญญา"];
   const SUBDISTRICT_OPTIONS = ["อ่างทอง","ลิปะน้อย","ตลิ่งงาม","หน้าเมือง","มะเร็ต","บ่อผุด","แม่น้ำ"];
@@ -215,7 +212,8 @@
 
   // =================== UTILS ===================
   const nf = new Intl.NumberFormat('th-TH');
-  const nfc = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // ปรับการแสดงผลตัวเลขเป็นทศนิยม 3 ตำแหน่ง
+  const nfc = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 
   function getLast12MonthsFormatted(){
     const months = [];
@@ -260,7 +258,6 @@
   function saveActiveTabToStorage(id){ localStorage.setItem('fecal.activeTab', id); }
   function getActiveTabFromStorage(){ return localStorage.getItem('fecal.activeTab') || 'add'; }
 
-  // Safe HTML escape
   function sanitize(str){
     const s = String(str == null ? '' : str);
     return s.replace(/[&<>"']/g, function(ch){
@@ -269,7 +266,6 @@
     });
   }
 
-  // JSONP helper (no eval)
   function fetchJSONP(url, callbackParam){
     if(!callbackParam){ callbackParam = 'callback'; }
     return new Promise(function(resolve, reject){
@@ -291,12 +287,25 @@
       document.body.appendChild(script);
     });
   }
+
+  // ปรับปรุงการเชื่อมต่อ API ใหม่ให้รองรับทั้ง GET และ POST
   function appsScriptRequest(action, payload){
-    const base = WEB_APP_URL + '?action=' + encodeURIComponent(action);
-    if(payload){
-      return fetchJSONP(base + '&data=' + encodeURIComponent(JSON.stringify(payload)), 'callback');
+    // ถ้าเป็นการเพิ่มหรืออัปเดตข้อมูล ใช้ POST (เพื่อรองรับหมายเหตุยาวๆ)
+    if(action === 'addBooking' || action === 'updateBooking') {
+      return fetch(WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: action, data: payload })
+      }).then(function(res){
+        return res.json();
+      });
+    } else {
+      // ถ้าเป็นการดึงหรือลบข้อมูล ใช้ GET (JSONP) ตามเดิม
+      let url = WEB_APP_URL + '?action=' + encodeURIComponent(action);
+      if(action === 'deleteByTimestamp' && payload){
+        url += '&timestamp=' + encodeURIComponent(payload.timestamp);
+      }
+      return fetchJSONP(url, 'callback');
     }
-    return fetchJSONP(base, 'callback');
   }
 
   // =================== TABS ===================
@@ -502,7 +511,6 @@
 
   const originalRowValues = Object.create(null);
 
-  // Event delegation for table actions
   document.getElementById('bookingsTableContainer').addEventListener('click', function(e){
     const btn = e.target.closest('button');
     if(!btn){ return; }
@@ -632,6 +640,7 @@
     document.getElementById('completedBookings').textContent = nf.format(completed);
     document.getElementById('incompleteBookings').textContent = nf.format(incomplete);
     document.getElementById('totalAmount').textContent = nfc.format(totalAmount);
+    
     const staffStats = Object.create(null);
     bookings.forEach(function(b){
       if(!b.staff){ return; }
@@ -655,43 +664,36 @@
     const monthlyRevenue = Object.fromEntries(last12.map(function(m){ return [m,0]; }));
     let paidCount = 0, freeCount = 0;
     const subVolume = Object.fromEntries(SUBDISTRICT_OPTIONS.map(function(s){ return [s,0]; }));
+    
     bookings.forEach(function(b){
       const d = new Date(b.timestamp);
       const ym = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
       if(last12.indexOf(ym) !== -1){
-
         monthlyServices[ym]++;
         if(b.paid){ monthlyRevenue[ym] += (parseFloat(b.amount) || 0); }
       }
       if(b.paid){ paidCount++; } else { freeCount++; }
       if(b.subdistrict){ subVolume[b.subdistrict] = (subVolume[b.subdistrict] || 0) + ((parseFloat(b.amount) || 0) / RATE_PER_CUBIC_METER); }
     });
+    
     const staffLabels = Object.keys(staffStats).sort();
     const staffTotals = staffLabels.map(function(k){ return staffStats[k].total; });
     const staffIncomplete = staffLabels.map(function(k){ return staffStats[k].incomplete; });
     const ctx1 = document.getElementById('staffPerformanceChart').getContext('2d');
     staffPerformanceChart = new Chart(ctx1, { type: 'bar', data: { labels: staffLabels, datasets: [ { label: 'งานทั้งหมด', data: staffTotals, backgroundColor: '#FF66B2', borderColor: '#E6007A', borderWidth: 1 }, { label: 'งานที่ยังไม่เสร็จ', data: staffIncomplete, backgroundColor: '#F44336', borderColor: '#da190b', borderWidth: 1 } ]}, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'จำนวนงาน' } }, x:{ title:{ display:true, text:'พนักงาน' } } }, plugins:{ title:{ display:true, text:'จำนวนงานรวมและงานที่ยังไม่เสร็จต่อพนักงาน', font:{ size:16, weight:'bold' }, color:'#E6007A' } } } });
+    
     const monthlyLabels = last12.map(formatMonthYearToThai);
     const monthlyServiceCounts = last12.map(function(m){ return monthlyServices[m]; });
     const ctx2 = document.getElementById('monthlyServicesChart').getContext('2d');
     monthlyServicesChart = new Chart(ctx2, { type: 'bar', data: { labels: monthlyLabels, datasets: [{ label: 'จำนวนการให้บริการ', data: monthlyServiceCounts, backgroundColor: '#FF99C8', borderColor: '#E6007A', borderWidth: 1 }] }, options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'จำนวนงาน' } }, x:{ title:{ display:true, text:'เดือน' } } }, plugins:{ title:{ display:true, text:'จำนวนการให้บริการ 12 เดือนล่าสุด', font:{ size:16, weight:'bold' }, color:'#E6007A' }, legend:{ display:false } } } });
+    
     const ctx3 = document.getElementById('paidFreeChart').getContext('2d');
     paidFreeChart = new Chart(ctx3, { type: 'pie', data: { labels: ['บริการเก็บเงิน','บริการฟรี'], datasets: [{ data: [paidCount, freeCount], backgroundColor: ['#4CAF50','#F44336'], borderColor: '#fff', borderWidth: 2 }] }, options: { responsive:true, maintainAspectRatio:false, plugins:{ title:{ display:true, text:'สัดส่วนระหว่างบริการเก็บเงิน/ฟรี', font:{ size:16, weight:'bold' }, color:'#E6007A' }, tooltip:{ callbacks:{ label:function(ctx){ const v = ctx.parsed || 0; const t = ctx.dataset.data.reduce(function(a,c){return a+c;},0) || 1; return ctx.label + ': ' + v + ' งาน (' + (v*100/t).toFixed(2) + '%)'; } } } } } });
-    // --- ส่วนแก้ไขเฉพาะ: รายได้ต่อเดือน 12 เดือนล่าสุด ---
-    const monthlyRevenueLabels = last12.map(formatMonthYearToThai);
     
-    // ดึงค่ารายได้จากที่คำนวณไว้ด้านบน (กรองเอาเฉพาะเดือนที่ตรงกับ 12 เดือนล่าสุด)
-    const monthlyRevenueAmounts = last12.map(function(m) { 
-      return monthlyRevenue[m] || 0; 
-    });
-
+    const monthlyRevenueLabels = last12.map(formatMonthYearToThai);
+    const monthlyRevenueAmounts = last12.map(function(m) { return monthlyRevenue[m] || 0; });
     const ctx4 = document.getElementById('monthlyRevenueChart').getContext('2d');
     
-    // ลบกราฟเก่าถ้ามีอยู่ (ป้องกันกราฟซ้อน)
-    if (window.monthlyRevenueChart instanceof Chart) {
-      window.monthlyRevenueChart.destroy();
-    }
-
     window.monthlyRevenueChart = new Chart(ctx4, { 
       type: 'bar', 
       data: { 
@@ -735,6 +737,7 @@
         } 
       } 
     });
+    
     const subdistrictVolumeLabels = Object.keys(subVolume).sort(function(a,b){ return SUBDISTRICT_OPTIONS.indexOf(a) - SUBDISTRICT_OPTIONS.indexOf(b); });
     const subdistrictVolumeValues = subdistrictVolumeLabels.map(function(s){ return +subVolume[s].toFixed(2); });
     const ctx5 = document.getElementById('subdistrictVolumeChart').getContext('2d');
@@ -753,15 +756,6 @@
   document.addEventListener('DOMContentLoaded', function(){
     populateSelectOptions();
     restoreActiveTab();
-
-    // ===== Self-tests (safe) =====
-    try{
-      console.assert(typeof debounce(function(){},200) === 'function', 'debounce should return a function');
-      const testStr = "<>&\"'</>"; // <>&"'</>
-      console.assert(sanitize(testStr) === '&lt;&gt;&amp;&quot;&#39;&lt;/>', 'sanitize mapping should match');
-      const m = getLast12MonthsFormatted();
-      console.assert(Array.isArray(m) && m.length === 12, 'getLast12MonthsFormatted length');
-    }catch(_e){ console.warn('Self-test warnings:', _e); }
   });
   </script>
 </body>
