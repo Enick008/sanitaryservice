@@ -665,13 +665,21 @@
     let paidCount = 0, freeCount = 0;
     const subVolume = Object.fromEntries(SUBDISTRICT_OPTIONS.map(function(s){ return [s,0]; }));
     
-    bookings.forEach(function(b){
-      const d = new Date(b.timestamp);
-      const ym = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-      if(last12.indexOf(ym) !== -1){
-        monthlyServices[ym]++;
-        if(b.paid){ monthlyRevenue[ym] += (parseFloat(b.amount) || 0); }
+bookings.forEach(function(b){
+      // ป้องกันกรณีแถวว่างหรือหาคอลัมน์ Timestamp ไม่เจอ
+      if (b.timestamp) {
+        const d = new Date(b.timestamp);
+        // เช็คว่าเป็นวันที่จริงๆ ไม่ใช่ข้อมูลขยะ
+        if (!isNaN(d.getTime())) {
+          const ym = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+          if(last12.indexOf(ym) !== -1){
+            monthlyServices[ym]++;
+            if(b.paid){ monthlyRevenue[ym] += (parseFloat(b.amount) || 0); }
+          }
+        }
       }
+      
+      // ข้อมูลส่วนอื่นๆ ยังคำนวณตามปกติ
       if(b.paid){ paidCount++; } else { freeCount++; }
       if(b.subdistrict){ subVolume[b.subdistrict] = (subVolume[b.subdistrict] || 0) + ((parseFloat(b.amount) || 0) / RATE_PER_CUBIC_METER); }
     });
@@ -694,7 +702,7 @@
     const monthlyRevenueAmounts = last12.map(function(m) { return monthlyRevenue[m] || 0; });
     const ctx4 = document.getElementById('monthlyRevenueChart').getContext('2d');
     
-    window.monthlyRevenueChart = new Chart(ctx4, { 
+    monthlyRevenueChart = new Chart(ctx4, { 
       type: 'bar', 
       data: { 
         labels: monthlyRevenueLabels, 
