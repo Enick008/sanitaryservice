@@ -189,7 +189,6 @@
   <script>
   'use strict';
   // =================== CONFIG ===================
-  // ⚠️ อย่าลืมนำ URL จากการ Deploy GS (New Deployment) อันใหม่มาใส่ตรงนี้นะคะ
   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyahkXofdS557MnH_9nHJm7K_a5Lo7LNIp87_E4ly2wiJ9zg50tZjNkWIXha1ExVcUpA/exec';
   const STAFF_OPTIONS = ["ศุภชัย เปี่ยมประถม","ไพรวัลย์ คำชาลี","ชวลิต ใจแผ้ว","ชาคริต ปัญญา"];
   const SUBDISTRICT_OPTIONS = ["อ่างทอง","ลิปะน้อย","ตลิ่งงาม","หน้าเมือง","มะเร็ต","บ่อผุด","แม่น้ำ"];
@@ -212,7 +211,6 @@
 
   // =================== UTILS ===================
   const nf = new Intl.NumberFormat('th-TH');
-  // ปรับการแสดงผลตัวเลขเป็นทศนิยม 3 ตำแหน่ง
   const nfc = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 
   function getLast12MonthsFormatted(){
@@ -288,9 +286,7 @@
     });
   }
 
-  // ปรับปรุงการเชื่อมต่อ API ใหม่ให้รองรับทั้ง GET และ POST
   function appsScriptRequest(action, payload){
-    // ถ้าเป็นการเพิ่มหรืออัปเดตข้อมูล ใช้ POST (เพื่อรองรับหมายเหตุยาวๆ)
     if(action === 'addBooking' || action === 'updateBooking') {
       return fetch(WEB_APP_URL, {
         method: 'POST',
@@ -299,7 +295,6 @@
         return res.json();
       });
     } else {
-      // ถ้าเป็นการดึงหรือลบข้อมูล ใช้ GET (JSONP) ตามเดิม
       let url = WEB_APP_URL + '?action=' + encodeURIComponent(action);
       if(action === 'deleteByTimestamp' && payload){
         url += '&timestamp=' + encodeURIComponent(payload.timestamp);
@@ -665,24 +660,50 @@
     let paidCount = 0, freeCount = 0;
     const subVolume = Object.fromEntries(SUBDISTRICT_OPTIONS.map(function(s){ return [s,0]; }));
     
-bookings.forEach(function(b){
-      // ป้องกันกรณีแถวว่างหรือหาคอลัมน์ Timestamp ไม่เจอ
-      if (b.timestamp) {
-        const d = new Date(b.timestamp);
-        // เช็คว่าเป็นวันที่จริงๆ ไม่ใช่ข้อมูลขยะ
-        if (!isNaN(d.getTime())) {
-          const ym = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-          if(last12.indexOf(ym) !== -1){
+    // --- จุดที่อัปเดตการดึงข้อมูลและแปลงวันที่เพื่อแก้กราฟไม่ขึ้น ---
+    bookings.forEach(function(b){
+      const rawDate = b.timestamp || b.Timestamp || b['วันที่'] || b['วันเวลา'] || b.date;
+
+      if (rawDate) {
+        let d = new Date(rawDate);
+        let year = d.getFullYear();
+        
+        // ถ้าวันที่อ่านไม่ออก (เช่น ใส่มาเป็น 23/06/2569) ให้พยายามแยกส่วนประกอบ
+        if (isNaN(d.getTime()) && typeof rawDate === 'string') {
+          const parts = rawDate.split(/[\/\-\sT]/);
+          if (parts.length >= 3) {
+            let p1 = parseInt(parts[0], 10);
+            let p2 = parseInt(parts[1], 10);
+            let p3 = parseInt(parts[2], 10);
+            
+            if (parts[0].length === 4) { 
+              // รูปแบบ YYYY-MM-DD
+              year = p1; d = new Date(p1, p2 - 1, p3);
+            } else { 
+              // รูปแบบ DD/MM/YYYY
+              year = p3; d = new Date(p3, p2 - 1, p1);
+            }
+          }
+        }
+
+        // ถ้าได้วันที่สมบูรณ์แล้ว ให้จัดการแปลง พ.ศ. เป็น ค.ศ.
+        if (d && !isNaN(d.getTime())) {
+          year = d.getFullYear();
+          if (year > 2500) { year -= 543; } // ปรับ พ.ศ. ให้เป็น ค.ศ. อัตโนมัติ
+          
+          const ym = year + '-' + String(d.getMonth() + 1).padStart(2, '0');
+          if (last12.indexOf(ym) !== -1) {
             monthlyServices[ym]++;
-            if(b.paid){ monthlyRevenue[ym] += (parseFloat(b.amount) || 0); }
+            if (b.paid) { monthlyRevenue[ym] += (parseFloat(b.amount) || 0); }
           }
         }
       }
       
-      // ข้อมูลส่วนอื่นๆ ยังคำนวณตามปกติ
+      // คำนวณข้อมูลส่วนอื่นๆ ตามปกติ
       if(b.paid){ paidCount++; } else { freeCount++; }
       if(b.subdistrict){ subVolume[b.subdistrict] = (subVolume[b.subdistrict] || 0) + ((parseFloat(b.amount) || 0) / RATE_PER_CUBIC_METER); }
     });
+    // ---------------------------------------------------------
     
     const staffLabels = Object.keys(staffStats).sort();
     const staffTotals = staffLabels.map(function(k){ return staffStats[k].total; });
