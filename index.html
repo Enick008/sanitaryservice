@@ -338,7 +338,12 @@
 </head>
 <body>
   <header>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Seal_of_Ko_Samui.png" alt="ตราเทศบาลนครเกาะสมุย" />
+    <img
+      src="https://upload.wikimedia.org/wikipedia/commons/b/b1/Seal_of_Ko_Samui.png"
+      alt="ตราเทศบาลนครเกาะสมุย"
+      referrerpolicy="no-referrer"
+      onerror="this.style.display='none';"
+    />
   </header>
   <div class="container">
     <h2>ระบบแจ้งงานดูดสิ่งปฏิกูล กองช่างสุขาภิบาล</h2>
@@ -549,7 +554,13 @@
   }
 
   function getMonthKeyFromTimestamp(ts) {
-    const d = new Date(ts);
+    if (!ts) return "";
+    const str = String(ts).trim();
+    const isoMatch = str.match(/^(\d{4})-(\d{2})/);
+    if (isoMatch) {
+      return `${isoMatch[1]}-${isoMatch[2]}`;
+    }
+    const d = new Date(str);
     if (isNaN(d.getTime())) return "";
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   }
@@ -1071,7 +1082,6 @@
     document.getElementById('incompleteBookings').textContent = nf.format(incompleteCount);
     document.getElementById('totalAmount').textContent = nfc.format(totalAmt);
 
-    // สรุปยอดงานค้างต่อพนักงาน
     const pendingMap = {};
     STAFF_OPTIONS.forEach(s => { pendingMap[s] = 0; });
     rows.forEach(r => {
@@ -1085,73 +1095,86 @@
       .map(([staffName, cnt]) => `<li><strong>${sanitize(staffName)}</strong>: ค้าง ${nf.format(cnt)} รายการ</li>`)
       .join('');
 
-    // 1. กราฟผลงานต่อพนักงาน (เสร็จสิ้น vs งานค้าง)
-    staffPerformanceChart = new Chart(document.getElementById('staffPerformanceChart'), {
-      type: 'bar',
-      data: {
-        labels: STAFF_OPTIONS,
-        datasets: [
-          {
-            label: 'เสร็จสิ้นแล้ว',
-            data: STAFF_OPTIONS.map(s => rows.filter(r => r.staff === s && r.completed).length),
-            backgroundColor: '#10B981'
-          },
-          {
-            label: 'ค้างดำเนินการ',
-            data: STAFF_OPTIONS.map(s => rows.filter(r => r.staff === s && !r.completed).length),
-            backgroundColor: '#EF4444'
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { title: { display: true, text: 'ปริมาณงานแยกตามพนักงาน' } },
-        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
-      }
-    });
+    // 1. กราฟผลงานต่อพนักงาน
+    const staffCanvas = document.getElementById('staffPerformanceChart');
+    if (staffCanvas) {
+      staffPerformanceChart = new Chart(staffCanvas, {
+        type: 'bar',
+        data: {
+          labels: STAFF_OPTIONS,
+          datasets: [
+            {
+              label: 'เสร็จสิ้นแล้ว',
+              data: STAFF_OPTIONS.map(s => rows.filter(r => r.staff === s && r.completed).length),
+              backgroundColor: '#10B981'
+            },
+            {
+              label: 'ค้างดำเนินการ',
+              data: STAFF_OPTIONS.map(s => rows.filter(r => r.staff === s && !r.completed).length),
+              backgroundColor: '#EF4444'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { title: { display: true, text: 'ปริมาณงานแยกตามพนักงาน' } },
+          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+        }
+      });
+    }
 
     // 2. กราฟจำนวนงานย้อนหลัง 12 เดือน
     const last12 = getLast12MonthsFormatted();
-    monthlyServicesChart = new Chart(document.getElementById('monthlyServicesChart'), {
-      type: 'line',
-      data: {
-        labels: last12.map(formatMonthYearToThai),
-        datasets: [{
-          label: 'จำนวนงาน (รายการ)',
-          data: last12.map(ym => rows.filter(r => getMonthKeyFromTimestamp(r.timestamp) === ym).length),
-          borderColor: '#0284C7',
-          backgroundColor: 'rgba(2, 132, 199, 0.15)',
-          fill: true,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { title: { display: true, text: 'แนวโน้มจำนวนงานย้อนหลัง 12 เดือน' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    const monthlyServiceCounts = last12.map(ym =>
+      rows.filter(r => getMonthKeyFromTimestamp(r.timestamp) === ym).length
+    );
 
-    // 3. กราฟสัดส่วนชำระเงินแล้ว vs ยังไม่ชำระ
+    const servicesCanvas = document.getElementById('monthlyServicesChart');
+    if (servicesCanvas) {
+      monthlyServicesChart = new Chart(servicesCanvas, {
+        type: 'line',
+        data: {
+          labels: last12.map(formatMonthYearToThai),
+          datasets: [{
+            label: 'จำนวนงาน (รายการ)',
+            data: monthlyServiceCounts,
+            borderColor: '#0284C7',
+            backgroundColor: 'rgba(2, 132, 199, 0.15)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { title: { display: true, text: 'แนวโน้มจำนวนงานย้อนหลัง 12 เดือน' } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+
+    // 3. กราฟสัดส่วนการชำระเงิน
     const paidCount = rows.filter(r => Boolean(r.paid)).length;
     const unpaidCount = total - paidCount;
-    paidFreeChart = new Chart(document.getElementById('paidFreeChart'), {
-      type: 'doughnut',
-      data: {
-        labels: ['ชำระเงินแล้ว', 'ยังไม่ชำระเงิน'],
-        datasets: [{
-          data: [paidCount, unpaidCount],
-          backgroundColor: ['#10B981', '#F59E0B']
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { title: { display: true, text: 'สัดส่วนการชำระเงิน' } }
-      }
-    });
+    const paidCanvas = document.getElementById('paidFreeChart');
+    if (paidCanvas) {
+      paidFreeChart = new Chart(paidCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: ['ชำระเงินแล้ว', 'ยังไม่ชำระเงิน'],
+          datasets: [{
+            data: [paidCount, unpaidCount],
+            backgroundColor: ['#10B981', '#F59E0B']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { title: { display: true, text: 'สัดส่วนการชำระเงิน' } }
+        }
+      });
+    }
 
     // 4. กราฟจำนวนงานแยกตามตำบล
     const subLabels = SUBDISTRICT_OPTIONS.slice();
@@ -1162,44 +1185,54 @@
       subCounts.push(otherSubCount);
     }
 
-    subdistrictVolumeChart = new Chart(document.getElementById('subdistrictVolumeChart'), {
-      type: 'bar',
-      data: {
-        labels: subLabels,
-        datasets: [{
-          label: 'จำนวนงาน (รายการ)',
-          data: subCounts,
-          backgroundColor: '#0284C7'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { title: { display: true, text: 'จำนวนงานแยกตามตำบล' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    const subCanvas = document.getElementById('subdistrictVolumeChart');
+    if (subCanvas) {
+      subdistrictVolumeChart = new Chart(subCanvas, {
+        type: 'bar',
+        data: {
+          labels: subLabels,
+          datasets: [{
+            label: 'จำนวนงาน (รายการ)',
+            data: subCounts,
+            backgroundColor: '#0284C7'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { title: { display: true, text: 'จำนวนงานแยกตามตำบล' } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
 
     // 5. กราฟรายได้ย้อนหลัง 12 เดือน
-    monthlyRevenueChart = new Chart(document.getElementById('monthlyRevenueChart'), {
-      type: 'bar',
-      data: {
-        labels: last12.map(formatMonthYearToThai),
-        datasets: [{
-          label: 'รายได้ (บาท)',
-          data: last12.map(ym => rows
-            .filter(r => getMonthKeyFromTimestamp(r.timestamp) === ym)
-            .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0)),
-          backgroundColor: '#10B981'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { title: { display: true, text: 'รายได้รายเดือนย้อนหลัง 12 เดือน (บาท)' } },
-        scales: { y: { beginAtZero: true } }
-      }
-    });
+    const monthlyRevenues = last12.map(ym =>
+      rows
+        .filter(r => getMonthKeyFromTimestamp(r.timestamp) === ym)
+        .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0)
+    );
+
+    const revenueCanvas = document.getElementById('monthlyRevenueChart');
+    if (revenueCanvas) {
+      monthlyRevenueChart = new Chart(revenueCanvas, {
+        type: 'bar',
+        data: {
+          labels: last12.map(formatMonthYearToThai),
+          datasets: [{
+            label: 'รายได้ (บาท)',
+            data: monthlyRevenues,
+            backgroundColor: '#10B981'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { title: { display: true, text: 'รายได้รายเดือนย้อนหลัง 12 เดือน (บาท)' } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
   }
 
   // =================== INIT ===================
