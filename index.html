@@ -8,25 +8,25 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
-    
+
     :root {
-      --primary: #0284C7;        /* สีฟ้าครามสมุย */
-      --primary-hover: #0369A1;  /* สีฟ้าเข้มตอนชี้เมาส์ */
-      --primary-light: #E0F2FE;  /* สีฟ้าอ่อนพื้นหลังปุ่ม */
-      --secondary: #10B981;      /* สีเขียวธรรมชาติ */
+      --primary: #0284C7;
+      --primary-hover: #0369A1;
+      --primary-light: #E0F2FE;
+      --secondary: #10B981;
       --secondary-hover: #059669;
-      --danger: #EF4444;         /* สีแดงแจ้งเตือน */
+      --danger: #EF4444;
       --danger-hover: #DC2626;
-      --bg: #F0F9FF;             /* สีพื้นหลังภาพรวม (ฟ้าอ่อนมาก) */
-      --card: #FFFFFF;           /* สีพื้นหลังกล่อง */
-      --text: #334155;           /* สีข้อความหลัก */
-      --text-muted: #64748B;     /* สีข้อความรอง */
-      --border: #E2E8F0;         /* สีเส้นขอบ */
-      --shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* เงานุ่มๆ */
+      --bg: #F0F9FF;
+      --card: #FFFFFF;
+      --text: #334155;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     }
-    
-    * { box-sizing: border-box; }
-    
+
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
       font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, sans-serif;
       margin: 0;
@@ -35,7 +35,7 @@
       color: var(--text);
       line-height: 1.6;
     }
-    
+
     header {
       max-width: 1000px;
       margin: 0 auto 20px;
@@ -46,7 +46,7 @@
       text-align: center;
       border-top: 4px solid var(--primary);
     }
-    
+
     header img {
       height: 85px;
       width: auto;
@@ -54,9 +54,9 @@
       margin: 0 auto;
       transition: transform 0.3s ease;
     }
-    
+
     header img:hover { transform: scale(1.05); }
-    
+
     .container {
       max-width: 1000px;
       margin: 0 auto;
@@ -65,7 +65,7 @@
       border-radius: 16px;
       box-shadow: var(--shadow);
     }
-    
+
     h2 {
       color: var(--primary);
       text-align: center;
@@ -73,20 +73,20 @@
       font-weight: 700;
       font-size: 24px;
     }
-    
+
     h3, h4 { color: var(--primary-hover); }
-    
+
     .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
     .col-6 { grid-column: span 6; }
     .col-4 { grid-column: span 4; }
     .col-3 { grid-column: span 3; }
     .col-2 { grid-column: span 2; }
     .col-12 { grid-column: span 12; }
-    
+
     @media (max-width: 768px) {
       .col-6, .col-4, .col-3, .col-2 { grid-column: span 12; }
     }
-    
+
     .form-group label {
       display: block;
       margin: 0 0 8px;
@@ -94,7 +94,7 @@
       color: var(--text);
       font-size: 15px;
     }
-    
+
     input[type="text"], input[type="tel"], input[type="number"], textarea, select {
       width: 100%;
       padding: 12px 16px;
@@ -105,20 +105,20 @@
       transition: all 0.2s ease;
       background-color: #F8FAFC;
     }
-    
+
     input:focus, textarea:focus, select:focus {
       outline: none;
       border-color: var(--primary);
       background-color: #FFF;
       box-shadow: 0 0 0 3px var(--primary-light);
     }
-    
+
     input[type="checkbox"] {
       transform: scale(1.2);
       margin-right: 8px;
       accent-color: var(--primary);
     }
-    
+
     button {
       background: var(--primary);
       color: #fff;
@@ -132,23 +132,24 @@
       transition: all 0.2s ease;
       box-shadow: 0 4px 6px rgba(2, 132, 199, 0.2);
     }
-    
-    button:hover { background: var(--primary-hover); transform: translateY(-1px); }
-    button:active { transform: translateY(1px); box-shadow: none; }
-    
+
+    button:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); }
+    button:active:not(:disabled) { transform: translateY(1px); box-shadow: none; }
+    button:disabled { opacity: 0.65; cursor: not-allowed; }
+
     .btn-outline {
       background: var(--primary-light);
       color: var(--primary-hover);
       box-shadow: none;
     }
-    .btn-outline:hover { background: #BAE6FD; color: var(--primary-dark); }
-    
-    .row-actions { display: flex; gap: 8px; justify-content: center; }
+    .btn-outline:hover:not(:disabled) { background: #BAE6FD; color: var(--primary-hover); }
+
+    .row-actions { display: flex; gap: 6px; justify-content: center; flex-wrap: nowrap; }
     .btn-green { background: var(--secondary); box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); }
-    .btn-green:hover { background: var(--secondary-hover); }
+    .btn-green:hover:not(:disabled) { background: var(--secondary-hover); }
     .btn-red { background: var(--danger); box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2); }
-    .btn-red:hover { background: var(--danger-hover); }
-    
+    .btn-red:hover:not(:disabled) { background: var(--danger-hover); }
+
     .message {
       margin-top: 16px;
       padding: 14px;
@@ -158,12 +159,12 @@
       font-weight: 600;
       animation: fadeIn 0.3s ease;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
     .success { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
     .error { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
     .info { background: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; }
-    
+
     .tabs {
       display: flex;
       gap: 10px;
@@ -174,7 +175,7 @@
       margin-bottom: 24px;
       border: 1px solid var(--border);
     }
-    
+
     .tab {
       flex: 1 1 30%;
       background: transparent;
@@ -185,18 +186,18 @@
       box-shadow: none;
       font-weight: 600;
     }
-    
-    .tab:hover { color: var(--primary); background: #F1F5F9; }
-    
+
+    .tab:hover:not(:disabled) { color: var(--primary); background: #F1F5F9; }
+
     .tab.active {
       background: var(--primary);
       color: #fff;
       box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3);
     }
-    
+
     .tab-content { display: none; }
-    .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
-    
+    .tab-content.active { display: block; animation: fadeIn 0.35s ease; }
+
     table {
       width: 100%;
       border-collapse: separate;
@@ -207,26 +208,26 @@
       overflow: hidden;
       border: 1px solid var(--border);
     }
-    
+
     th, td {
       border-bottom: 1px solid var(--border);
-      padding: 14px 12px;
+      padding: 12px 10px;
       text-align: left;
       vertical-align: middle;
+      font-size: 14px;
     }
-    
+
     th {
       background: #F8FAFC;
       font-weight: 700;
       color: var(--text-muted);
-      text-transform: uppercase;
       font-size: 13px;
-      letter-spacing: 0.5px;
+      white-space: nowrap;
     }
-    
+
     tr:last-child td { border-bottom: none; }
     tr:hover td { background-color: #F0F9FF; }
-    
+
     .toolbar {
       display: flex;
       gap: 12px;
@@ -239,11 +240,11 @@
       border-radius: 12px;
       border: 1px solid var(--border);
     }
-    
+
     .chart-container {
       position: relative;
       width: 100%;
-      height: 360px;
+      height: 350px;
       margin-top: 24px;
       background: #fff;
       border-radius: 16px;
@@ -251,7 +252,7 @@
       padding: 20px;
       border: 1px solid var(--border);
     }
-    
+
     footer {
       text-align: center;
       margin: 24px auto 0;
@@ -262,7 +263,7 @@
       font-weight: 500;
       max-width: 1000px;
     }
-    
+
     .modal {
       display: none;
       position: fixed;
@@ -273,7 +274,7 @@
       align-items: center;
       justify-content: center;
     }
-    
+
     .modal .content {
       background: #fff;
       border-radius: 16px;
@@ -283,12 +284,12 @@
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
       text-align: center;
     }
-    
+
     .modal h3 { color: var(--text); margin: 0 0 12px; font-size: 22px; }
     .modal p { color: var(--text-muted); margin-bottom: 24px; }
     .modal .actions { display: flex; gap: 12px; justify-content: center; }
     .modal .actions button { width: 120px; }
-    
+
     .pagination {
       display: flex;
       gap: 10px;
@@ -298,7 +299,7 @@
       padding-top: 16px;
       border-top: 1px solid var(--border);
     }
-    
+
     .badge {
       display: inline-block;
       padding: 4px 10px;
@@ -308,8 +309,7 @@
     }
     .badge.green { background: #D1FAE5; color: #065F46; }
     .badge.red { background: #FEE2E2; color: #991B1B; }
-    
-    /* สไตล์เฉพาะสถิติสรุปด้านบน */
+
     .stats-summary-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -332,7 +332,7 @@
       background: linear-gradient(135deg, var(--danger), #B91C1C);
       box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.3);
     }
-    .stat-card h4 { color: rgba(255,255,255,0.8); margin: 0 0 8px; font-size: 14px; font-weight: 500; }
+    .stat-card h4 { color: rgba(255,255,255,0.85); margin: 0 0 8px; font-size: 14px; font-weight: 500; }
     .stat-card p { font-size: 28px; font-weight: 700; margin: 0; line-height: 1.2; }
   </style>
 </head>
@@ -361,12 +361,12 @@
             <input id="phone" type="tel" inputmode="tel" placeholder="0XXXXXXXXX" pattern="^0[0-9]{8,9}$" />
           </div>
           <div class="form-group col-4">
-            <label for="house_number">เลขที่บ้าน</label>
-            <input id="house_number" type="text" placeholder="เช่น 123/4" />
+            <label for="houseNumber">เลขที่บ้าน</label>
+            <input id="houseNumber" type="text" placeholder="เช่น 123/4" />
           </div>
           <div class="form-group col-4">
-            <label for="village_number">หมู่ที่</label>
-            <input id="village_number" type="text" placeholder="เช่น ม.1" />
+            <label for="villageNumber">หมู่ที่</label>
+            <input id="villageNumber" type="text" placeholder="เช่น ม.1" />
           </div>
           <div class="form-group col-4">
             <label for="subdistrict">ตำบล</label>
@@ -423,21 +423,20 @@
           </div>
         </div>
         <div style="display:flex; gap:8px; width: 100%; justify-content: flex-end; margin-top: 8px;">
-          <button id="btnFilter" class="btn-outline">ค้นหา/รีเฟรช</button>
-          <button id="btnExport" class="btn-green">ดาวน์โหลด CSV</button>
+          <button id="btnFilter" class="btn-outline" type="button">ค้นหา/รีเฟรช</button>
+          <button id="btnExport" class="btn-green" type="button">ดาวน์โหลด CSV</button>
         </div>
       </div>
       <div id="bookingsTableContainer" style="overflow-x: auto;"></div>
       <div class="pagination" id="pagination" style="display:none">
-        <button class="btn-outline" id="prevPage">◀ ก่อนหน้า</button>
+        <button class="btn-outline" id="prevPage" type="button">◀ ก่อนหน้า</button>
         <span id="pageInfo" style="font-weight: 600; color: var(--text-muted); margin: 0 10px;"></span>
-        <button class="btn-outline" id="nextPage">ถัดไป ▶</button>
+        <button class="btn-outline" id="nextPage" type="button">ถัดไป ▶</button>
       </div>
       <div id="viewMessage" class="message"></div>
     </section>
 
     <section id="tab-stats" class="tab-content" aria-labelledby="tab-stats">
-      
       <div class="stats-summary-grid">
         <div class="stat-card">
           <h4>งานทั้งหมด (รายการ)</h4>
@@ -462,19 +461,19 @@
           <h4 style="margin-top: 0;">📌 สรุปยอดงานค้างต่อพนักงาน:</h4>
           <ul id="staffStatsList" style="margin: 0; padding-left: 20px; color: var(--text-muted);"></ul>
         </div>
-        
+
         <div class="chart-container"><canvas id="staffPerformanceChart"></canvas></div>
         <div class="chart-container"><canvas id="monthlyServicesChart"></canvas></div>
-        
+
         <div class="grid">
           <div class="col-6">
             <div class="chart-container"><canvas id="paidFreeChart"></canvas></div>
           </div>
           <div class="col-6">
-             <div class="chart-container"><canvas id="subdistrictVolumeChart"></canvas></div>
+            <div class="chart-container"><canvas id="subdistrictVolumeChart"></canvas></div>
           </div>
         </div>
-        
+
         <div class="chart-container"><canvas id="monthlyRevenueChart"></canvas></div>
       </div>
       <div id="statsMessage" class="message"></div>
@@ -490,116 +489,166 @@
       <h3 id="modalTitle">⚠️ ยืนยันการลบข้อมูล</h3>
       <p id="modalBody">คุณต้องการลบรายการนี้ใช่หรือไม่?<br>การกระทำนี้ไม่สามารถย้อนกลับได้</p>
       <div class="actions">
-        <button class="btn-outline" id="confirmNoBtn">ยกเลิก</button>
-        <button class="btn-red" id="confirmYesBtn">ยืนยันลบ</button>
+        <button class="btn-outline" id="confirmNoBtn" type="button">ยกเลิก</button>
+        <button class="btn-red" id="confirmYesBtn" type="button">ยืนยันลบ</button>
       </div>
     </div>
   </div>
 
   <script>
   'use strict';
+
   // =================== CONFIG ===================
   const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyyahkXofdS557MnH_9nHJm7K_a5Lo7LNIp87_E4ly2wiJ9zg50tZjNkWIXha1ExVcUpA/exec';
-  const STAFF_OPTIONS = ["ศุภชัย เปี่ยมประถม","ไพรวัลย์ คำชาลี","ชวลิต ใจแผ้ว","ชาคริต ปัญญา"];
-  const SUBDISTRICT_OPTIONS = ["อ่างทอง","ลิปะน้อย","ตลิ่งงาม","หน้าเมือง","มะเร็ต","บ่อผุด","แม่น้ำ"];
-  const RATE_PER_CUBIC_METER = 250;
+  const STAFF_OPTIONS = ["ศุภชัย เปี่ยมประถม", "ไพรวัลย์ คำชาลี", "ชวลิต ใจแผ้ว", "ชาคริต ปัญญา"];
+  const SUBDISTRICT_OPTIONS = ["อ่างทอง", "ลิปะน้อย", "ตลิ่งงาม", "หน้าเมือง", "มะเร็ต", "บ่อผุด", "แม่น้ำ"];
+
+  const TABLE_COLUMNS = [
+    { key: "name", label: "ชื่อลูกค้า" },
+    { key: "phone", label: "เบอร์โทร" },
+    { key: "houseNumber", label: "บ้านเลขที่" },
+    { key: "villageNumber", label: "หมู่ที่" },
+    { key: "subdistrict", label: "ตำบล" },
+    { key: "staff", label: "พนักงาน" },
+    { key: "amount", label: "ค่าบริการ" },
+    { key: "paid", label: "ชำระเงิน" },
+    { key: "completed", label: "เสร็จสิ้น" },
+    { key: "notes", label: "หมายเหตุ" }
+  ];
 
   // =================== STATE ===================
   let allBookingsData = [];
-  let editingRowTimestamp = null;
   let deleteConfirmTimestamp = null;
   let filteredCache = [];
   let currentPage = 1;
   const perPage = 20;
 
-  let staffPerformanceChart, monthlyServicesChart, paidFreeChart, monthlyRevenueChart, subdistrictVolumeChart = null;
+  let staffPerformanceChart = null;
+  let monthlyServicesChart = null;
+  let paidFreeChart = null;
+  let subdistrictVolumeChart = null;
+  let monthlyRevenueChart = null;
 
   const nf = new Intl.NumberFormat('th-TH');
-  const nfc = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  const nfc = new Intl.NumberFormat('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  function getLast12MonthsFormatted(){
+  function getLast12MonthsFormatted() {
     const months = [];
     const today = new Date();
-    for(let i=0;i<12;i++){
-      const d = new Date(today.getFullYear(), today.getMonth()-i, 1);
-      months.unshift(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      months.unshift(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
     }
     return months;
   }
-  
-  function formatMonthYearToThai(ym){
-    const [y,m] = ym.split('-');
-    const d = new Date(Number(y), Number(m)-1, 1);
-    return d.toLocaleString('th-TH', { month: 'long' }) + ' ' + y; 
+
+  function formatMonthYearToThai(ym) {
+    const [y, m] = ym.split('-');
+    const d = new Date(Number(y), Number(m) - 1, 1);
+    return d.toLocaleDateString('th-TH', { month: 'short' }) + ' ' + (Number(y) + 543);
   }
-  
-  function debounce(fn, ms=300){
-    let t;
-    return function(){
+
+  function getMonthKeyFromTimestamp(ts) {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "";
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  function debounce(fn, ms = 300) {
+    let timer;
+    return function() {
       const args = arguments;
-      clearTimeout(t);
-      t = setTimeout(function(){ fn.apply(null, args); }, ms);
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(null, args), ms);
     };
   }
-  function displayMessage(msg, type, target='message'){
+
+  function displayMessage(msg, type, target = 'message') {
     const el = document.getElementById(target);
+    if (!el) return;
     el.textContent = msg;
     el.className = `message ${type}`;
     el.style.display = 'block';
-    setTimeout(() => { if(el.className.includes(type)) el.style.display = 'none'; }, 5000);
+    setTimeout(() => {
+      if (el.className.includes(type)) el.style.display = 'none';
+    }, 5000);
   }
-  function populateSelectOptions(){
+
+  function populateSelectOptions() {
     const staffNodes = [document.getElementById('staff'), document.getElementById('filterStaff')];
     staffNodes.forEach(sel => {
-      sel.innerHTML = '<option value="">' + (sel.id==='filterStaff'?'-- ทั้งหมด --':'-- เลือกพนักงาน --') + '</option>' +
-        STAFF_OPTIONS.map(o => `<option value="${o}">${o}</option>`).join('');
+      const defaultText = sel.id === 'filterStaff' ? '-- ทั้งหมด --' : '-- เลือกพนักงาน --';
+      sel.innerHTML = `<option value="">${defaultText}</option>` +
+        STAFF_OPTIONS.map(o => `<option value="${sanitize(o)}">${sanitize(o)}</option>`).join('');
     });
+
     const subNodes = [document.getElementById('subdistrict'), document.getElementById('filterSubdistrict')];
     subNodes.forEach(sel => {
-      sel.innerHTML = '<option value="">' + (sel.id==='filterSubdistrict'?'-- ทั้งหมด --':'-- เลือกตำบล --') + '</option>' +
-        SUBDISTRICT_OPTIONS.map(o => `<option value="${o}">${o}</option>`).join('');
+      const defaultText = sel.id === 'filterSubdistrict' ? '-- ทั้งหมด --' : '-- เลือกตำบล --';
+      sel.innerHTML = `<option value="">${defaultText}</option>` +
+        SUBDISTRICT_OPTIONS.map(o => `<option value="${sanitize(o)}">${sanitize(o)}</option>`).join('');
     });
   }
-  function saveActiveTabToStorage(id){ localStorage.setItem('fecal.activeTab', id); }
-  function getActiveTabFromStorage(){ return localStorage.getItem('fecal.activeTab') || 'add'; }
 
-  function sanitize(str){
-    const s = String(str == null ? '' : str);
-    return s.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  function saveActiveTabToStorage(id) {
+    localStorage.setItem('fecal.activeTab', id);
   }
 
-  function fetchJSONP(url, callbackParam = 'callback'){
+  function getActiveTabFromStorage() {
+    return localStorage.getItem('fecal.activeTab') || 'add';
+  }
+
+  function sanitize(str) {
+    const s = String(str == null ? '' : str);
+    return s.replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+  }
+
+  function fetchJSONP(url, callbackParam = 'callback') {
     return new Promise((resolve, reject) => {
       const cbName = 'jsonp_cb_' + Math.random().toString(36).slice(2);
       const script = document.createElement('script');
       const sep = url.indexOf('?') !== -1 ? '&' : '?';
       let finished = false;
+
       const timeout = setTimeout(() => done(new Error('เชื่อมต่อเซิร์ฟเวอร์ล้มเหลว (Timeout)')), 15000);
-      function done(err, data){
-        if(finished) return; finished = true;
+
+      function done(err, data) {
+        if (finished) return;
+        finished = true;
         clearTimeout(timeout);
-        if(script.parentNode) script.parentNode.removeChild(script);
+        if (script.parentNode) script.parentNode.removeChild(script);
         delete window[cbName];
-        if(err) reject(err); else resolve(data);
+        if (err) reject(err);
+        else resolve(data);
       }
+
       window[cbName] = data => done(null, data);
-      script.src = url + sep + callbackParam + '=' + cbName;
+      script.src = `${url}${sep}${encodeURIComponent(callbackParam)}=${cbName}`;
       script.onerror = () => done(new Error('เกิดข้อผิดพลาดในการโหลดข้อมูล'));
       document.body.appendChild(script);
     });
   }
 
-  function appsScriptRequest(action, payload){
-    if(action === 'addBooking' || action === 'updateBooking') {
+  function appsScriptRequest(action, payload) {
+    if (action === 'addBooking' || action === 'updateBooking') {
       return fetch(WEB_APP_URL, {
         method: 'POST',
+        redirect: 'follow',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: action, data: payload })
-      }).then(res => res.json());
-    } else {
-      let url = WEB_APP_URL + '?action=' + encodeURIComponent(action);
-      if(action === 'deleteByTimestamp' && payload) url += '&timestamp=' + encodeURIComponent(payload.timestamp);
-      return fetchJSONP(url, 'callback');
+      }).then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      });
     }
+
+    let url = `${WEB_APP_URL}?action=${encodeURIComponent(action)}`;
+    if (action === 'deleteByTimestamp' && payload && payload.timestamp) {
+      url += `&timestamp=${encodeURIComponent(payload.timestamp)}`;
+    }
+    return fetchJSONP(url, 'callback');
   }
 
   // =================== TABS ===================
@@ -611,27 +660,38 @@
       document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
       document.getElementById('tab-' + id).classList.add('active');
       saveActiveTabToStorage(id);
-      if(id==='search') fetchAndRenderAllBookings(false);
-      if(id==='stats') fetchAndRenderAllBookings(true);
+      if (id === 'search') fetchAndRenderAllBookings(false);
+      if (id === 'stats') fetchAndRenderAllBookings(true);
     });
   });
 
   // =================== ADD BOOKING ===================
-  document.getElementById('bookingForm').addEventListener('submit', function(e){
+  document.getElementById('bookingForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    const name = document.getElementById('name');
-    const phone = document.getElementById('phone');
+    const nameEl = document.getElementById('name');
+    const phoneEl = document.getElementById('phone');
     const nameErr = document.getElementById('nameErr');
-    nameErr.style.display = name.value.trim() ? 'none' : 'inline-block';
-    if(!name.value.trim()){ name.focus(); return; }
-    if(phone.value && !/^0\d{8,9}$/.test(phone.value)){ displayMessage('รูปแบบเบอร์โทรไม่ถูกต้อง','error'); phone.focus(); return; }
+
+    const nameVal = nameEl.value.trim();
+    const phoneVal = phoneEl.value.trim();
+
+    nameErr.style.display = nameVal ? 'none' : 'inline-block';
+    if (!nameVal) {
+      nameEl.focus();
+      return;
+    }
+    if (phoneVal && !/^0\d{8,9}$/.test(phoneVal)) {
+      displayMessage('รูปแบบเบอร์โทรไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 9-10 หลัก)', 'error');
+      phoneEl.focus();
+      return;
+    }
 
     const bookingData = {
       timestamp: new Date().toISOString(),
-      name: name.value.trim(),
-      phone: phone.value.trim(),
-      house_number: document.getElementById('house_number').value.trim(),
-      village_number: document.getElementById('village_number').value.trim(),
+      name: nameVal,
+      phone: phoneVal,
+      houseNumber: document.getElementById('houseNumber').value.trim(),
+      villageNumber: document.getElementById('villageNumber').value.trim(),
       subdistrict: document.getElementById('subdistrict').value,
       staff: document.getElementById('staff').value,
       amount: parseFloat(document.getElementById('amount').value) || 0,
@@ -641,327 +701,516 @@
     };
 
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true; btn.textContent = 'กำลังบันทึกข้อมูล...';
+    btn.disabled = true;
+    btn.textContent = 'กำลังบันทึกข้อมูล...';
+
     appsScriptRequest('addBooking', bookingData)
       .then(res => {
-        if(res && res.success){
-          displayMessage('✅ แจ้งงานสำเร็จเรียบร้อย!','success');
+        if (res && res.success) {
+          displayMessage('✅ แจ้งงานสำเร็จเรียบร้อย!', 'success');
           document.getElementById('bookingForm').reset();
+          document.getElementById('amount').value = '0';
+          nameErr.style.display = 'none';
+          if (res.timestamp) bookingData.timestamp = res.timestamp;
+          allBookingsData.push(bookingData);
         } else {
-          displayMessage('❌ แจ้งงานไม่สำเร็จ: ' + (res?.error || 'ไม่ทราบสาเหตุ'),'error');
+          displayMessage('❌ แจ้งงานไม่สำเร็จ: ' + (res?.error || 'ไม่ทราบสาเหตุ'), 'error');
         }
       })
-      .catch(err => displayMessage('❌ เชื่อมต่อผิดพลาด: ' + err.message,'error'))
-      .finally(() => { btn.disabled = false; btn.textContent = 'บันทึกแจ้งงาน'; });
+      .catch(err => displayMessage('❌ เชื่อมต่อผิดพลาด: ' + err.message, 'error'))
+      .finally(() => {
+        btn.disabled = false;
+        btn.textContent = 'บันทึกแจ้งงาน';
+      });
   });
 
-  // =================== SEARCH & REPORT ===================
-  document.getElementById('btnFilter').addEventListener('click', applyFilters);
-  document.getElementById('searchName').addEventListener('input', debounce(applyFilters, 350));
+  // =================== SEARCH, FILTER & EXPORT ===================
+  document.getElementById('btnFilter').addEventListener('click', () => fetchAndRenderAllBookings(false));
+  document.getElementById('searchName').addEventListener('input', debounce(applyFilters, 300));
   document.getElementById('filterStaff').addEventListener('change', applyFilters);
   document.getElementById('filterSubdistrict').addEventListener('change', applyFilters);
   document.getElementById('filterCompleted').addEventListener('change', applyFilters);
-  document.getElementById('prevPage').addEventListener('click', () => { if(currentPage>1){ currentPage--; renderBookingsTable(filteredCache); }});
-  document.getElementById('nextPage').addEventListener('click', () => { const max = Math.ceil(filteredCache.length/perPage)||1; if(currentPage<max){ currentPage++; renderBookingsTable(filteredCache); }});
-  document.getElementById('btnExport').addEventListener('click', () => {
-    if(!filteredCache.length){ displayMessage('ไม่มีข้อมูลสำหรับดาวน์โหลด','info','viewMessage'); return; }
-    const headers = Object.keys(filteredCache[0]);
-    const csv = [headers.join(',')].concat(filteredCache.map(o => headers.map(h => `"${String(o[h]||'').replace(/\"/g, '""')}"`).join(','))).join('\n');
-    const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' }));
-    const a = document.createElement('a'); a.href = url; a.download = `รายงานงานสิ่งปฏิกูล_${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(url);
+
+  document.getElementById('prevPage').addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderBookingsTable(filteredCache);
+    }
   });
 
-  function fetchAndRenderAllBookings(forStats = false){
+  document.getElementById('nextPage').addEventListener('click', () => {
+    const maxPage = Math.ceil(filteredCache.length / perPage) || 1;
+    if (currentPage < maxPage) {
+      currentPage++;
+      renderBookingsTable(filteredCache);
+    }
+  });
+
+  document.getElementById('btnExport').addEventListener('click', () => {
+    if (!filteredCache.length) {
+      displayMessage('ไม่มีข้อมูลสำหรับดาวน์โหลด', 'info', 'viewMessage');
+      return;
+    }
+    const exportCols = [{ key: 'timestamp', label: 'Timestamp' }].concat(TABLE_COLUMNS);
+    const csvRows = [exportCols.map(c => `"${c.label}"`).join(',')];
+
+    filteredCache.forEach(row => {
+      const line = exportCols.map(c => {
+        let v = row[c.key];
+        if (c.key === 'paid' || c.key === 'completed') v = v ? 'Yes' : 'No';
+        if (c.key === 'phone') v = String(v || '');
+        return `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+      }).join(',');
+      csvRows.push(line);
+    });
+
+    const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `รายงานงานสิ่งปฏิกูล_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  function fetchAndRenderAllBookings(forStats = false) {
     const msgId = forStats ? 'statsMessage' : 'viewMessage';
     document.getElementById(msgId).style.display = 'none';
-    if(!forStats) document.getElementById('bookingsTableContainer').innerHTML = '<p style="text-align:center; padding: 20px; color:var(--primary);">⏳ กำลังโหลดข้อมูล กรุณารอสักครู่...</p>';
-    else destroyAllChartsAndResetCanvases();
+
+    if (!forStats) {
+      document.getElementById('bookingsTableContainer').innerHTML =
+        '<p style="text-align:center; padding: 20px; color:var(--primary);">⏳ กำลังโหลดข้อมูล กรุณารอสักครู่...</p>';
+    } else {
+      destroyAllChartsAndResetCanvases();
+    }
 
     appsScriptRequest('getBookings')
       .then(res => {
-        if(res && res.success){
-          allBookingsData = res.data || [];
-          if(forStats) renderStatistics(allBookingsData); else applyFilters();
+        if (res && res.success) {
+          allBookingsData = Array.isArray(res.data) ? res.data : [];
+          if (forStats) renderStatistics(allBookingsData);
+          else applyFilters();
         } else {
-          displayMessage('ไม่สามารถโหลดข้อมูลได้: ' + (res?.error || 'ไม่ทราบสาเหตุ'),'error',msgId);
-          if(!forStats) document.getElementById('bookingsTableContainer').innerHTML = '';
+          displayMessage('ไม่สามารถโหลดข้อมูลได้: ' + (res?.error || 'ไม่ทราบสาเหตุ'), 'error', msgId);
+          if (!forStats) document.getElementById('bookingsTableContainer').innerHTML = '';
         }
       })
       .catch(err => {
-        displayMessage('ข้อผิดพลาดการเชื่อมต่อ: ' + err.message,'error',msgId);
-        if(!forStats) document.getElementById('bookingsTableContainer').innerHTML = '';
+        displayMessage('ข้อผิดพลาดการเชื่อมต่อ: ' + err.message, 'error', msgId);
+        if (!forStats) document.getElementById('bookingsTableContainer').innerHTML = '';
       });
   }
 
-  function applyFilters(){
-    const search = document.getElementById('searchName').value.toLowerCase();
+  function applyFilters() {
+    const search = document.getElementById('searchName').value.trim().toLowerCase();
     const fStaff = document.getElementById('filterStaff').value;
     const fSub = document.getElementById('filterSubdistrict').value;
     const fCompleted = document.getElementById('filterCompleted').value;
+
     filteredCache = allBookingsData.filter(b => {
-      const byName = !search || String(b.name||'').toLowerCase().includes(search) || String(b.phone||'').toLowerCase().includes(search);
-      const byStaff = !fStaff || b.staff === fStaff;
-      const bySub = !fSub || b.subdistrict === fSub;
-      const byComp = !fCompleted || (fCompleted === 'Yes' ? b.completed === true : b.completed === false);
-      return byName && byStaff && bySub && byComp;
+      const matchText = !search ||
+        String(b.name || '').toLowerCase().includes(search) ||
+        String(b.phone || '').toLowerCase().includes(search) ||
+        String(b.houseNumber || '').toLowerCase().includes(search);
+      const matchStaff = !fStaff || b.staff === fStaff;
+      const matchSub = !fSub || b.subdistrict === fSub;
+      const isDone = Boolean(b.completed);
+      const matchComp = !fCompleted || (fCompleted === 'Yes' ? isDone : !isDone);
+      return matchText && matchStaff && matchSub && matchComp;
     });
+
     currentPage = 1;
     renderBookingsTable(filteredCache);
   }
 
-  function renderBookingsTable(rows){
+  function renderBookingsTable(rows) {
     const container = document.getElementById('bookingsTableContainer');
-    if(!rows.length){ container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">📭 ไม่พบรายการงานที่ตรงกับเงื่อนไขการค้นหา</p>'; document.getElementById('pagination').style.display = 'none'; return; }
+    if (!rows.length) {
+      container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">📭 ไม่พบรายการงานที่ตรงกับเงื่อนไขการค้นหา</p>';
+      document.getElementById('pagination').style.display = 'none';
+      return;
+    }
 
-    const headers = Object.keys(rows[0]).filter(h => h.toLowerCase() !== 'timestamp');
-    const pageRows = rows.slice((currentPage - 1) * perPage, currentPage * perPage);
     const totalPages = Math.ceil(rows.length / perPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    const pageRows = rows.slice((currentPage - 1) * perPage, currentPage * perPage);
+
     document.getElementById('pagination').style.display = totalPages > 1 ? 'flex' : 'none';
-    document.getElementById('pageInfo').textContent = `หน้า ${currentPage} จาก ${totalPages}`;
+    document.getElementById('pageInfo').textContent = `หน้า ${currentPage} จาก ${totalPages} (ทั้งหมด ${nf.format(rows.length)} รายการ)`;
 
     let html = '<table><thead><tr>';
-    headers.forEach(h => html += `<th>${sanitize(h.replace(/([A-Z])/g,' $1').replace(/^./,c=>c.toUpperCase()))}</th>`);
+    TABLE_COLUMNS.forEach(col => {
+      html += `<th>${sanitize(col.label)}</th>`;
+    });
     html += '<th style="text-align:center;">จัดการ</th></tr></thead><tbody>';
 
     pageRows.forEach(b => {
       html += `<tr data-timestamp="${sanitize(b.timestamp)}">`;
-      headers.forEach(h => {
-        let val = b[h];
-        if(h === 'paid' || h === 'completed') val = val ? '✔️' : '❌';
-        html += `<td><span class="display-mode">${sanitize(val)}</span>${renderEditControl(h, b)}</td>`;
+      TABLE_COLUMNS.forEach(col => {
+        const key = col.key;
+        let displayVal = b[key];
+
+        if (key === 'paid' || key === 'completed') {
+          displayVal = b[key] ? '✔️' : '❌';
+        } else if (key === 'amount') {
+          displayVal = nfc.format(parseFloat(b[key]) || 0);
+        } else {
+          displayVal = b[key] == null ? '' : String(b[key]);
+        }
+
+        html += `<td><span class="display-mode">${sanitize(displayVal)}</span>${renderEditControl(key, b)}</td>`;
       });
-      html += `<td style="text-align:center;"><div class="row-actions">
-        <button class="edit-btn btn-outline" style="padding:6px 12px; font-size:14px;">แก้ไข</button>
-        <button class="save-btn btn-green" style="display:none; padding:6px 12px; font-size:14px;">บันทึก</button>
-        <button class="cancel-btn btn-outline" style="display:none; padding:6px 12px; font-size:14px;">ยกเลิก</button>
-        <button class="delete-btn btn-red" style="padding:6px 12px; font-size:14px;">ลบ</button>
-      </div></td></tr>`;
+
+      html += `<td style="text-align:center;">
+        <div class="row-actions">
+          <button class="edit-btn btn-outline" type="button" style="padding:6px 10px; font-size:13px;">แก้ไข</button>
+          <button class="save-btn btn-green" type="button" style="display:none; padding:6px 10px; font-size:13px;">บันทึก</button>
+          <button class="cancel-btn btn-outline" type="button" style="display:none; padding:6px 10px; font-size:13px;">ยกเลิก</button>
+          <button class="delete-btn btn-red" type="button" style="padding:6px 10px; font-size:13px;">ลบ</button>
+        </div>
+      </td></tr>`;
     });
+
     html += '</tbody></table>';
     container.innerHTML = html;
   }
 
-  function renderEditControl(field, b){
+  function renderEditControl(field, b) {
     const val = b[field] == null ? '' : b[field];
-    if(field === 'amount') return `<input class="edit-mode" data-field="amount" type="number" step="0.01" min="0" value="${sanitize(val)}" style="display:none;width:100px;padding:6px;">`;
-    if(field === 'paid') return `<input class="edit-mode" data-field="paid" type="checkbox" ${b.paid?'checked':''} style="display:none">`;
-    if(field === 'completed') return `<select class="edit-mode" data-field="completed" style="display:none;padding:6px;"><option value="true" ${b.completed?'selected':''}>Yes</option><option value="false" ${!b.completed?'selected':''}>No</option></select>`;
-    if(field === 'staff') return `<select class="edit-mode" data-field="staff" style="display:none;padding:6px;"><option value="">เลือกพนักงาน</option>${STAFF_OPTIONS.map(o=>`<option ${o===b.staff?'selected':''} value="${sanitize(o)}">${sanitize(o)}</option>`).join('')}</select>`;
-    if(field === 'subdistrict') return `<select class="edit-mode" data-field="subdistrict" style="display:none;padding:6px;"><option value="">เลือกตำบล</option>${SUBDISTRICT_OPTIONS.map(o=>`<option ${o===b.subdistrict?'selected':''} value="${sanitize(o)}">${sanitize(o)}</option>`).join('')}</select>`;
-    return `<input class="edit-mode" data-field="${sanitize(field)}" type="text" value="${sanitize(val)}" style="display:none;min-width:120px;padding:6px;">`;
+    if (field === 'amount') {
+      return `<input class="edit-mode" data-field="amount" type="number" step="0.01" min="0" value="${sanitize(parseFloat(val) || 0)}" style="display:none;width:95px;padding:6px;">`;
+    }
+    if (field === 'paid') {
+      return `<input class="edit-mode" data-field="paid" type="checkbox" ${b.paid ? 'checked' : ''} style="display:none">`;
+    }
+    if (field === 'completed') {
+      return `<select class="edit-mode" data-field="completed" style="display:none;padding:6px;">
+        <option value="true" ${b.completed ? 'selected' : ''}>เสร็จสิ้น</option>
+        <option value="false" ${!b.completed ? 'selected' : ''}>ยังไม่เสร็จ</option>
+      </select>`;
+    }
+    if (field === 'staff') {
+      return `<select class="edit-mode" data-field="staff" style="display:none;padding:6px;">
+        <option value="">เลือกพนักงาน</option>
+        ${STAFF_OPTIONS.map(o => `<option value="${sanitize(o)}" ${o === b.staff ? 'selected' : ''}>${sanitize(o)}</option>`).join('')}
+      </select>`;
+    }
+    if (field === 'subdistrict') {
+      return `<select class="edit-mode" data-field="subdistrict" style="display:none;padding:6px;">
+        <option value="">เลือกตำบล</option>
+        ${SUBDISTRICT_OPTIONS.map(o => `<option value="${sanitize(o)}" ${o === b.subdistrict ? 'selected' : ''}>${sanitize(o)}</option>`).join('')}
+      </select>`;
+    }
+    return `<input class="edit-mode" data-field="${sanitize(field)}" type="text" value="${sanitize(val)}" style="display:none;min-width:100px;padding:6px;">`;
   }
 
-  const originalRowValues = Object.create(null);
   document.getElementById('bookingsTableContainer').addEventListener('click', e => {
-    const btn = e.target.closest('button'), row = e.target.closest('tr');
-    if(!btn || !row) return;
+    const btn = e.target.closest('button');
+    const row = e.target.closest('tr');
+    if (!btn || !row) return;
     const ts = row.getAttribute('data-timestamp');
-    if(btn.classList.contains('edit-btn')) enterEditMode(row, ts);
-    else if(btn.classList.contains('save-btn')) saveBooking(row, ts);
-    else if(btn.classList.contains('cancel-btn')) cancelEdit(row, ts);
-    else if(btn.classList.contains('delete-btn')) showConfirmModal(ts, row.querySelector('td').innerText.trim());
+
+    if (btn.classList.contains('edit-btn')) {
+      enterEditMode(row);
+    } else if (btn.classList.contains('save-btn')) {
+      saveBooking(row, ts);
+    } else if (btn.classList.contains('cancel-btn')) {
+      cancelEdit(row);
+    } else if (btn.classList.contains('delete-btn')) {
+      const customerName = row.querySelector('td')?.innerText?.trim() || 'รายการนี้';
+      showConfirmModal(ts, customerName);
+    }
   });
 
-  function enterEditMode(row, timestamp){
-    editingRowTimestamp = timestamp;
-    const booking = allBookingsData.find(b => b.timestamp === timestamp);
-    originalRowValues[timestamp] = booking ? JSON.parse(JSON.stringify(booking)) : {};
-    row.querySelectorAll('.display-mode').forEach(s => s.style.display='none');
-    row.querySelectorAll('.edit-mode').forEach(el => el.style.display = (el.type === 'checkbox' ? 'inline' : 'inline-block'));
-    row.querySelector('.edit-btn').style.display='none'; row.querySelector('.delete-btn').style.display='none';
-    row.querySelector('.save-btn').style.display='inline-block'; row.querySelector('.cancel-btn').style.display='inline-block';
+  function enterEditMode(row) {
+    row.querySelectorAll('.display-mode').forEach(s => { s.style.display = 'none'; });
+    row.querySelectorAll('.edit-mode').forEach(el => {
+      el.style.display = el.type === 'checkbox' ? 'inline' : 'inline-block';
+    });
+    row.querySelector('.edit-btn').style.display = 'none';
+    row.querySelector('.delete-btn').style.display = 'none';
+    row.querySelector('.save-btn').style.display = 'inline-block';
+    row.querySelector('.cancel-btn').style.display = 'inline-block';
   }
 
-  function saveBooking(row, timestamp){
+  function cancelEdit(row) {
+    row.querySelectorAll('.display-mode').forEach(s => { s.style.display = ''; });
+    row.querySelectorAll('.edit-mode').forEach(el => { el.style.display = 'none'; });
+    row.querySelector('.edit-btn').style.display = 'inline-block';
+    row.querySelector('.delete-btn').style.display = 'inline-block';
+    row.querySelector('.save-btn').style.display = 'none';
+    row.querySelector('.cancel-btn').style.display = 'none';
+  }
+
+  function saveBooking(row, timestamp) {
     const updated = { timestamp: timestamp };
     row.querySelectorAll('.edit-mode').forEach(el => {
-      const field = el.getAttribute('data-field'); if(!field) return;
-      if(el.tagName === 'SELECT') updated[field] = (field === 'completed') ? (el.value === 'true') : el.value;
-      else if(el.type === 'checkbox') updated[field] = !!el.checked;
-      else if(el.type === 'number') updated[field] = parseFloat(el.value) || 0;
-      else updated[field] = el.value;
+      const field = el.getAttribute('data-field');
+      if (!field) return;
+      if (el.tagName === 'SELECT') {
+        updated[field] = field === 'completed' ? (el.value === 'true') : el.value;
+      } else if (el.type === 'checkbox') {
+        updated[field] = Boolean(el.checked);
+      } else if (el.type === 'number') {
+        updated[field] = parseFloat(el.value) || 0;
+      } else {
+        updated[field] = el.value.trim();
+      }
     });
-    displayMessage('⏳ กำลังอัปเดตข้อมูล...','info','viewMessage');
-    appsScriptRequest('updateBooking', updated).then(res => {
-      if(res && res.success){ displayMessage('✅ บันทึกข้อมูลสำเร็จ!','success','viewMessage'); fetchAndRenderAllBookings(false); editingRowTimestamp = null; }
-      else displayMessage('❌ อัปเดตไม่สำเร็จ: ' + (res?.error||''),'error','viewMessage');
-    }).catch(err => { displayMessage('❌ เกิดข้อผิดพลาด: ' + err.message,'error','viewMessage'); exitEditMode(row); });
+
+    if (!updated.name) {
+      displayMessage('กรุณาระบุชื่อลูกค้า', 'error', 'viewMessage');
+      return;
+    }
+
+    const saveBtn = row.querySelector('.save-btn');
+    const cancelBtn = row.querySelector('.cancel-btn');
+    saveBtn.disabled = true;
+    cancelBtn.disabled = true;
+    saveBtn.textContent = 'กำลังบันทึก...';
+
+    appsScriptRequest('updateBooking', updated)
+      .then(res => {
+        if (res && res.success) {
+          displayMessage('✅ บันทึกการแก้ไขเรียบร้อย', 'success', 'viewMessage');
+          const idx = allBookingsData.findIndex(b => b.timestamp === timestamp);
+          if (idx !== -1) {
+            allBookingsData[idx] = Object.assign({}, allBookingsData[idx], updated);
+          }
+          applyFilters();
+        } else {
+          displayMessage('❌ แก้ไขไม่สำเร็จ: ' + (res?.error || 'ไม่ทราบสาเหตุ'), 'error', 'viewMessage');
+          saveBtn.disabled = false;
+          cancelBtn.disabled = false;
+          saveBtn.textContent = 'บันทึก';
+        }
+      })
+      .catch(err => {
+        displayMessage('❌ เชื่อมต่อผิดพลาด: ' + err.message, 'error', 'viewMessage');
+        saveBtn.disabled = false;
+        cancelBtn.disabled = false;
+        saveBtn.textContent = 'บันทึก';
+      });
   }
 
-  function cancelEdit(row, timestamp){
-    const original = originalRowValues[timestamp];
-    if(original) row.querySelectorAll('.edit-mode').forEach(el => {
-      const f = el.getAttribute('data-field'); if(!(f in original)) return;
-      if(el.type === 'checkbox') el.checked = !!original[f]; else el.value = original[f];
-    });
-    exitEditMode(row);
-  }
-
-  function exitEditMode(row){
-    row.querySelectorAll('.display-mode').forEach(s => s.style.display='inline');
-    row.querySelectorAll('.edit-mode').forEach(el => el.style.display='none');
-    row.querySelector('.edit-btn').style.display='inline-block'; row.querySelector('.delete-btn').style.display='inline-block';
-    row.querySelector('.save-btn').style.display='none'; row.querySelector('.cancel-btn').style.display='none';
-  }
-
-  function showConfirmModal(timestamp, name){
+  // =================== DELETE MODAL ===================
+  function showConfirmModal(timestamp, labelText) {
     deleteConfirmTimestamp = timestamp;
-    document.getElementById('modalBody').innerHTML = `คุณต้องการลบรายการของ <strong>${sanitize(name)}</strong> ใช่หรือไม่?<br>การกระทำนี้ไม่สามารถย้อนกลับได้`;
+    document.getElementById('modalBody').innerHTML =
+      `คุณต้องการลบรายการของ <strong>${sanitize(labelText)}</strong> ใช่หรือไม่?<br>การกระทำนี้ไม่สามารถย้อนกลับได้`;
     document.getElementById('confirmModal').style.display = 'flex';
   }
-  function hideConfirmModal(){ document.getElementById('confirmModal').style.display = 'none'; deleteConfirmTimestamp = null; }
-  document.getElementById('confirmYesBtn').addEventListener('click', () => {
-    if(!deleteConfirmTimestamp) return; hideConfirmModal();
-    displayMessage('⏳ กำลังลบข้อมูล...','info','viewMessage');
-    appsScriptRequest('deleteByTimestamp', { timestamp: deleteConfirmTimestamp }).then(res => {
-      if(res && res.success){ displayMessage('✅ ลบข้อมูลสำเร็จ!','success','viewMessage'); fetchAndRenderAllBookings(false); }
-      else displayMessage('❌ ลบไม่สำเร็จ: ' + (res?.error||''),'error','viewMessage');
-    }).catch(err => displayMessage('❌ ข้อผิดพลาด: ' + err.message,'error','viewMessage'));
-  });
+
+  function hideConfirmModal() {
+    deleteConfirmTimestamp = null;
+    document.getElementById('confirmModal').style.display = 'none';
+  }
+
   document.getElementById('confirmNoBtn').addEventListener('click', hideConfirmModal);
-  window.addEventListener('click', e => { if(e.target === document.getElementById('confirmModal')) hideConfirmModal(); });
 
-  // =================== STATS ===================
-  // ธีมสีใหม่สำหรับกราฟ
-  const chartColors = {
-    primary: '#0284C7',
-    primaryLight: '#38BDF8',
-    secondary: '#10B981',
-    danger: '#EF4444',
-    warning: '#F59E0B',
-    teal: '#0D9488',
-    multi: ['#0284C7', '#0EA5E9', '#38BDF8', '#10B981', '#34D399', '#F59E0B', '#FBBF24']
-  };
+  document.getElementById('confirmModal').addEventListener('click', e => {
+    if (e.target.id === 'confirmModal') hideConfirmModal();
+  });
 
-  function destroyAllChartsAndResetCanvases(){
-    [staffPerformanceChart, monthlyServicesChart, paidFreeChart, monthlyRevenueChart, subdistrictVolumeChart].forEach(c => c && c.destroy());
-    ['staffPerformanceChart','monthlyServicesChart','paidFreeChart','monthlyRevenueChart','subdistrictVolumeChart'].forEach(id => {
-      const old = document.getElementById(id), parent = old.parentNode;
-      old.remove(); const c = document.createElement('canvas'); c.id = id; parent.appendChild(c);
-    });
-  }
+  document.getElementById('confirmYesBtn').addEventListener('click', function() {
+    if (!deleteConfirmTimestamp) return;
+    const ts = deleteConfirmTimestamp;
+    const yesBtn = this;
+    const noBtn = document.getElementById('confirmNoBtn');
 
-  function renderStatistics(bookings){
-    const total = bookings.length;
-    const completed = bookings.filter(b => b.completed === true).length;
-    const totalAmount = bookings.reduce((s,b) => s + (parseFloat(b.amount) || 0), 0);
-    
-    document.getElementById('totalBookings').textContent = nf.format(total);
-    document.getElementById('completedBookings').textContent = nf.format(completed);
-    document.getElementById('incompleteBookings').textContent = nf.format(total - completed);
-    document.getElementById('totalAmount').textContent = nfc.format(totalAmount);
-    
-    const staffStats = Object.create(null);
-    bookings.forEach(b => {
-      if(!b.staff) return;
-      if(!staffStats[b.staff]) staffStats[b.staff] = { total: 0, incomplete: 0 };
-      staffStats[b.staff].total++;
-      if(!b.completed) staffStats[b.staff].incomplete++;
-    });
-    
-    const staffList = document.getElementById('staffStatsList');
-    staffList.innerHTML = '';
-    if(Object.keys(staffStats).length){
-      Object.keys(staffStats).sort().forEach(s => {
-        staffList.innerHTML += `<li><strong>${s}</strong>: ${staffStats[s].total} งาน <span style="color:var(--danger); font-size:14px;">(ค้าง ${staffStats[s].incomplete} งาน)</span></li>`;
+    yesBtn.disabled = true;
+    noBtn.disabled = true;
+    yesBtn.textContent = 'กำลังลบ...';
+
+    appsScriptRequest('deleteByTimestamp', { timestamp: ts })
+      .then(res => {
+        if (res && res.success) {
+          displayMessage('🗑️ ลบข้อมูลเรียบร้อยแล้ว', 'success', 'viewMessage');
+          allBookingsData = allBookingsData.filter(b => b.timestamp !== ts);
+          hideConfirmModal();
+          applyFilters();
+        } else {
+          displayMessage('❌ ลบข้อมูลไม่สำเร็จ: ' + (res?.error || 'ไม่ทราบสาเหตุ'), 'error', 'viewMessage');
+        }
+      })
+      .catch(err => {
+        displayMessage('❌ เชื่อมต่อผิดพลาด: ' + err.message, 'error', 'viewMessage');
+      })
+      .finally(() => {
+        yesBtn.disabled = false;
+        noBtn.disabled = false;
+        yesBtn.textContent = 'ยืนยันลบ';
       });
-    } else staffList.innerHTML = '<li>ไม่มีข้อมูลพนักงาน</li>';
+  });
 
-    const last12 = getLast12MonthsFormatted();
-    const monthlyServices = Object.fromEntries(last12.map(m => [m,0]));
-    const monthlyRevenue = Object.fromEntries(last12.map(m => [m,0]));
-    let paidCount = 0, freeCount = 0;
-    const subVolume = Object.fromEntries(SUBDISTRICT_OPTIONS.map(s => [s,0]));
-    
-    bookings.forEach(b => {
-      let rawDate = b.timestamp || b.Timestamp || b['วันที่'] || b['วันเวลา'] || b.date || Object.values(b)[0];
-      if (rawDate) {
-        let d = new Date(rawDate);
-        let year;
-        if (isNaN(d.getTime()) && typeof rawDate === 'string') {
-          let parts = rawDate.split(/[\/\-\sT]/).filter(x => x);
-          if (parts.length >= 3) {
-            let p1 = parseInt(parts[0], 10), p2 = parseInt(parts[1], 10), p3 = parseInt(parts[2], 10);
-            if (p1 > 1000) d = new Date(p1, p2 - 1, p3); else if (p3 > 1000) d = new Date(p3, p2 - 1, p1);
-          }
-        }
-        if (d && !isNaN(d.getTime())) {
-          year = d.getFullYear();
-          if (year > 2500) year -= 543;
-          const ym = year + '-' + String(d.getMonth() + 1).padStart(2, '0');
-          if (last12.includes(ym)) {
-            monthlyServices[ym]++;
-            if (b.paid) monthlyRevenue[ym] += (parseFloat(b.amount) || 0);
-          }
-        }
+  // =================== STATISTICS & CHARTS ===================
+  function destroyAllChartsAndResetCanvases() {
+    [staffPerformanceChart, monthlyServicesChart, paidFreeChart, subdistrictVolumeChart, monthlyRevenueChart].forEach(ch => {
+      if (ch && typeof ch.destroy === 'function') ch.destroy();
+    });
+    staffPerformanceChart = null;
+    monthlyServicesChart = null;
+    paidFreeChart = null;
+    subdistrictVolumeChart = null;
+    monthlyRevenueChart = null;
+  }
+
+  function renderStatistics(rows) {
+    destroyAllChartsAndResetCanvases();
+
+    const total = rows.length;
+    const completedRows = rows.filter(r => Boolean(r.completed));
+    const completedCount = completedRows.length;
+    const incompleteCount = total - completedCount;
+    const totalAmt = rows.reduce((acc, r) => acc + (parseFloat(r.amount) || 0), 0);
+
+    document.getElementById('totalBookings').textContent = nf.format(total);
+    document.getElementById('completedBookings').textContent = nf.format(completedCount);
+    document.getElementById('incompleteBookings').textContent = nf.format(incompleteCount);
+    document.getElementById('totalAmount').textContent = nfc.format(totalAmt);
+
+    // สรุปยอดงานค้างต่อพนักงาน
+    const pendingMap = {};
+    STAFF_OPTIONS.forEach(s => { pendingMap[s] = 0; });
+    rows.forEach(r => {
+      if (!r.completed) {
+        const s = r.staff || 'ไม่ระบุพนักงาน';
+        pendingMap[s] = (pendingMap[s] || 0) + 1;
       }
-      if(b.paid) paidCount++; else freeCount++;
-      if(b.subdistrict) subVolume[b.subdistrict] = (subVolume[b.subdistrict] || 0) + ((parseFloat(b.amount) || 0) / RATE_PER_CUBIC_METER);
     });
-    
-    Chart.defaults.font.family = "'Sarabun', sans-serif";
-    Chart.defaults.color = '#64748B';
 
-    const staffLabels = Object.keys(staffStats).sort();
-    staffPerformanceChart = new Chart(document.getElementById('staffPerformanceChart'), { 
-      type: 'bar', 
-      data: { 
-        labels: staffLabels, 
-        datasets: [ 
-          { label: 'งานทั้งหมด', data: staffLabels.map(k=>staffStats[k].total), backgroundColor: chartColors.primary, borderRadius: 4 }, 
-          { label: 'งานค้าง', data: staffLabels.map(k=>staffStats[k].incomplete), backgroundColor: chartColors.danger, borderRadius: 4 } 
+    document.getElementById('staffStatsList').innerHTML = Object.entries(pendingMap)
+      .map(([staffName, cnt]) => `<li><strong>${sanitize(staffName)}</strong>: ค้าง ${nf.format(cnt)} รายการ</li>`)
+      .join('');
+
+    // 1. กราฟผลงานต่อพนักงาน (เสร็จสิ้น vs งานค้าง)
+    staffPerformanceChart = new Chart(document.getElementById('staffPerformanceChart'), {
+      type: 'bar',
+      data: {
+        labels: STAFF_OPTIONS,
+        datasets: [
+          {
+            label: 'เสร็จสิ้นแล้ว',
+            data: STAFF_OPTIONS.map(s => rows.filter(r => r.staff === s && r.completed).length),
+            backgroundColor: '#10B981'
+          },
+          {
+            label: 'ค้างดำเนินการ',
+            data: STAFF_OPTIONS.map(s => rows.filter(r => r.staff === s && !r.completed).length),
+            backgroundColor: '#EF4444'
+          }
         ]
-      }, 
-      options: { responsive:true, maintainAspectRatio:false, plugins:{ title:{ display:true, text:'เปรียบเทียบภาระงานต่อพนักงาน', font:{ size:18, weight:'bold' }, color: chartColors.primary } } } 
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'ปริมาณงานแยกตามพนักงาน' } },
+        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+      }
     });
-    
-    monthlyServicesChart = new Chart(document.getElementById('monthlyServicesChart'), { 
-      type: 'line', 
-      data: { 
-        labels: last12.map(formatMonthYearToThai), 
-        datasets: [{ label: 'จำนวนเที่ยวรถ', data: last12.map(m=>monthlyServices[m]), borderColor: chartColors.primary, backgroundColor: chartColors.primaryLight, fill: true, tension: 0.3 }] 
-      }, 
-      options: { responsive:true, maintainAspectRatio:false, plugins:{ title:{ display:true, text:'แนวโน้มการให้บริการ (12 เดือนล่าสุด)', font:{ size:18, weight:'bold' }, color: chartColors.primary } } } 
+
+    // 2. กราฟจำนวนงานย้อนหลัง 12 เดือน
+    const last12 = getLast12MonthsFormatted();
+    monthlyServicesChart = new Chart(document.getElementById('monthlyServicesChart'), {
+      type: 'line',
+      data: {
+        labels: last12.map(formatMonthYearToThai),
+        datasets: [{
+          label: 'จำนวนงาน (รายการ)',
+          data: last12.map(ym => rows.filter(r => getMonthKeyFromTimestamp(r.timestamp) === ym).length),
+          borderColor: '#0284C7',
+          backgroundColor: 'rgba(2, 132, 199, 0.15)',
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'แนวโน้มจำนวนงานย้อนหลัง 12 เดือน' } },
+        scales: { y: { beginAtZero: true } }
+      }
     });
-    
-    paidFreeChart = new Chart(document.getElementById('paidFreeChart'), { 
-      type: 'doughnut', 
-      data: { 
-        labels: ['มีค่าธรรมเนียม','บริการฟรี (งบเทศบาล)'], 
-        datasets: [{ data: [paidCount, freeCount], backgroundColor: [chartColors.secondary, chartColors.warning], borderWidth: 0 }] 
-      }, 
-      options: { responsive:true, maintainAspectRatio:false, plugins:{ title:{ display:true, text:'สัดส่วนประเภทการให้บริการ', font:{ size:18, weight:'bold' }, color: chartColors.primary } } } 
+
+    // 3. กราฟสัดส่วนชำระเงินแล้ว vs ยังไม่ชำระ
+    const paidCount = rows.filter(r => Boolean(r.paid)).length;
+    const unpaidCount = total - paidCount;
+    paidFreeChart = new Chart(document.getElementById('paidFreeChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['ชำระเงินแล้ว', 'ยังไม่ชำระเงิน'],
+        datasets: [{
+          data: [paidCount, unpaidCount],
+          backgroundColor: ['#10B981', '#F59E0B']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'สัดส่วนการชำระเงิน' } }
+      }
     });
-    
-    monthlyRevenueChart = new Chart(document.getElementById('monthlyRevenueChart'), { 
-      type: 'bar', 
-      data: { 
-        labels: last12.map(formatMonthYearToThai), 
-        datasets: [{ label: 'รายได้ (บาท)', data: last12.map(m=>monthlyRevenue[m]), backgroundColor: chartColors.teal, borderRadius: 6 }] 
-      }, 
-      options: { responsive:true, maintainAspectRatio:false, plugins:{ title:{ display:true, text:'สรุปรายได้เข้าเทศบาล (12 เดือนล่าสุด)', font:{ size:18, weight:'bold' }, color: chartColors.teal } }, scales:{ y:{ ticks:{ callback: v => v.toLocaleString('th-TH') } } } } 
+
+    // 4. กราฟจำนวนงานแยกตามตำบล
+    const subLabels = SUBDISTRICT_OPTIONS.slice();
+    const otherSubCount = rows.filter(r => r.subdistrict && !SUBDISTRICT_OPTIONS.includes(r.subdistrict)).length;
+    const subCounts = subLabels.map(sub => rows.filter(r => r.subdistrict === sub).length);
+    if (otherSubCount > 0) {
+      subLabels.push('อื่นๆ');
+      subCounts.push(otherSubCount);
+    }
+
+    subdistrictVolumeChart = new Chart(document.getElementById('subdistrictVolumeChart'), {
+      type: 'bar',
+      data: {
+        labels: subLabels,
+        datasets: [{
+          label: 'จำนวนงาน (รายการ)',
+          data: subCounts,
+          backgroundColor: '#0284C7'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'จำนวนงานแยกตามตำบล' } },
+        scales: { y: { beginAtZero: true } }
+      }
     });
-    
-    const subLabels = Object.keys(subVolume).sort((a,b)=>SUBDISTRICT_OPTIONS.indexOf(a)-SUBDISTRICT_OPTIONS.indexOf(b));
-    subdistrictVolumeChart = new Chart(document.getElementById('subdistrictVolumeChart'), { 
-      type: 'bar', 
-      data: { 
-        labels: subLabels, 
-        datasets: [{ label: 'ปริมาณ (ลบ.ม.)', data: subLabels.map(s=>+subVolume[s].toFixed(2)), backgroundColor: chartColors.multi, borderRadius: 4 }] 
-      }, 
-      options: { indexAxis: 'y', responsive:true, maintainAspectRatio:false, plugins:{ title:{ display:true, text:'ปริมาณสิ่งปฏิกูลแยกตามตำบล (ลบ.ม.)', font:{ size:18, weight:'bold' }, color: chartColors.primary }, legend:{display:false} } } 
+
+    // 5. กราฟรายได้ย้อนหลัง 12 เดือน
+    monthlyRevenueChart = new Chart(document.getElementById('monthlyRevenueChart'), {
+      type: 'bar',
+      data: {
+        labels: last12.map(formatMonthYearToThai),
+        datasets: [{
+          label: 'รายได้ (บาท)',
+          data: last12.map(ym => rows
+            .filter(r => getMonthKeyFromTimestamp(r.timestamp) === ym)
+            .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0)),
+          backgroundColor: '#10B981'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { title: { display: true, text: 'รายได้รายเดือนย้อนหลัง 12 เดือน (บาท)' } },
+        scales: { y: { beginAtZero: true } }
+      }
     });
   }
 
-  function restoreActiveTab(){
-    const id = getActiveTabFromStorage();
-    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === id));
-    document.querySelectorAll('.tab-content').forEach(s => s.classList.toggle('active', s.id === 'tab-' + id));
-    if(id === 'search') fetchAndRenderAllBookings(false);
-    if(id === 'stats') fetchAndRenderAllBookings(true);
-  }
-
-  document.addEventListener('DOMContentLoaded', () => { populateSelectOptions(); restoreActiveTab(); });
+  // =================== INIT ===================
+  populateSelectOptions();
+  const initialTab = getActiveTabFromStorage();
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === initialTab));
+  document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
+  const activeSec = document.getElementById('tab-' + initialTab);
+  if (activeSec) activeSec.classList.add('active');
+  if (initialTab === 'search') fetchAndRenderAllBookings(false);
+  if (initialTab === 'stats') fetchAndRenderAllBookings(true);
   </script>
 </body>
 </html>
